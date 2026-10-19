@@ -66,9 +66,6 @@ export default function RegistrarPrestamo({
   const [plazoMeses, setPlazoMeses] = useState(12);
   const [monto, setMonto] = useState(1000);
 
-  // Determinar si es persona jurídica de forma global y segura para todos los pasos y modales
-  const esJuridica = (contrato?.clienteDni || dni || '').length === 11 || tipoDocumento === 'RUC';
-
   const [simulacion, setSimulacion] = useState(null);
   const [cargandoSimulacion, setCargandoSimulacion] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -90,6 +87,9 @@ export default function RegistrarPrestamo({
   // Modal de cancelación
   const [mostrarModalCancelar, setMostrarModalCancelar] = useState(false);
   const [motivoCancelacion, setMotivoCancelacion] = useState('');
+
+  // Determinar si es persona jurídica de forma global y segura para todos los pasos y modales (después de inicializar contrato y dni)
+  const esJuridica = (contrato?.clienteDni || dni || '').length === 11 || tipoDocumento === 'RUC';
 
   useEffect(() => {
     const verificarContratosEnEspera = async () => {
