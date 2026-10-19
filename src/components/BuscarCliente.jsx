@@ -251,9 +251,17 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
           {/* Préstamos registrados del cliente para cobro rápido */}
           {prestamosCliente.length > 0 && (
             <div className="mt-5 pt-4 border-t border-[#E3D3C2]/40">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[#2A2220] mb-3">
-                Préstamos registrados del cliente ({prestamosCliente.length})
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#2A2220]">
+                  Préstamos registrados del cliente ({prestamosCliente.length})
+                </h3>
+                <span className="text-[11px] font-medium text-[#6E625B]">
+                  Deuda activa:{' '}
+                  <strong className={prestamosCliente.some((p) => ['VIGENTE', 'MOROSO', 'EXTRAJUDICIAL'].includes(p.estado)) ? 'text-[#9C4A2B]' : 'text-emerald-700'}>
+                    {prestamosCliente.some((p) => ['VIGENTE', 'MOROSO', 'EXTRAJUDICIAL'].includes(p.estado)) ? 'Con préstamo activo' : 'Sin deuda activa'}
+                  </strong>
+                </span>
+              </div>
               <div className="space-y-2">
                 {prestamosCliente.map((p) => (
                   <div
@@ -262,7 +270,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                   >
                     <div>
                       <div className="font-bold text-[#2A2220]">
-                        Préstamo #{p.id} — S/ {Number(p.capital).toFixed(2)}
+                        Préstamo #{p.id} {p.numeroContrato ? `(${p.numeroContrato})` : ''} — S/ {Number(p.capital).toFixed(2)}
                       </div>
                       <div className="text-[11px] text-[#6E625B]">
                         Plazo: {p.plazoMeses} meses • Cuota fija: S/ {Number(p.cuotaFija).toFixed(2)} • Agencia: {p.sucursalNombre}
@@ -273,6 +281,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                         p.estado === 'VIGENTE' ? 'bg-emerald-100 text-emerald-800' :
                         p.estado === 'MOROSO' ? 'bg-amber-100 text-amber-800' :
                         p.estado === 'EXTRAJUDICIAL' ? 'bg-red-100 text-red-800' :
+                        p.estado === 'EN_ESPERA' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        p.estado === 'ANULADO' ? 'bg-gray-100 text-gray-700' :
                         'bg-slate-100 text-slate-700'
                       }`}>
                         {p.estado}
@@ -283,7 +293,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                           onClick={() => onVerPrestamo(p.id)}
                           className="h-8 px-3 text-xs font-medium rounded-md bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer"
                         >
-                          Cobrar cuota / Ver
+                          {p.estado === 'EN_ESPERA' ? 'Ver contrato' : 'Cobrar cuota / Ver'}
                         </button>
                       )}
                     </div>

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
+import ComprobanteModal from './ComprobanteModal';
 
 export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo }) {
   const [prestamo, setPrestamo] = useState(null);
   const [pagos, setPagos] = useState([]);
+  const [comprobanteSeleccionado, setComprobanteSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [procesandoPago, setProcesandoPago] = useState(false);
+  const [descargandoContrato, setDescargandoContrato] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
   const [error, setError] = useState('');
 
@@ -24,6 +27,20 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
     }
   };
 
+  const handleVerContrato = async () => {
+    try {
+      setDescargandoContrato(true);
+      setError('');
+      const blob = await api.contratos.descargar(prestamoId);
+      const fileUrl = window.URL.createObjectURL(blob);
+      window.open(fileUrl, '_blank');
+    } catch (err) {
+      setError(err.message || 'Error al descargar contrato firmado');
+    } finally {
+      setDescargandoContrato(false);
+    }
+  };
+
   useEffect(() => {
     if (prestamoId) {
       cargarDatos();
@@ -39,7 +56,13 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
     setProcesandoPago(true);
     try {
       const pago = await api.pago.pagarCuota(prestamoId);
-      setMensajeExito(`Pago registrado con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} (${pago.sucursalNombre})`);
+      setMensajeExito(`Comprobante ${pago.numeroComprobante || '#' + pago.id} emitido con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} (${pago.sucursalNombre})`);
+      setComprobanteSeleccionado({
+        ...pago,
+        clienteNombre: prestamo.clienteNombre,
+        clienteDocumento: prestamo.clienteDni,
+        prestamoId: prestamo.id,
+      });
       await cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al procesar el pago de la cuota');
@@ -57,7 +80,13 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
     setProcesandoPago(true);
     try {
       const pago = await api.pago.cancelarAnticipado(prestamoId);
-      setMensajeExito(`Préstamo cancelado anticipadamente con éxito. Monto total cobrado: S/ ${Number(pago.monto).toFixed(2)} (${pago.sucursalNombre})`);
+      setMensajeExito(`Préstamo cancelado con comprobante ${pago.numeroComprobante || '#' + pago.id}. Monto total cobrado: S/ ${Number(pago.monto).toFixed(2)}.`);
+      setComprobanteSeleccionado({
+        ...pago,
+        clienteNombre: prestamo.clienteNombre,
+        clienteDocumento: prestamo.clienteDni,
+        prestamoId: prestamo.id,
+      });
       await cargarDatos();
     } catch (err) {
       setError(err.message || 'Error al procesar la cancelación anticipada');
@@ -125,6 +154,16 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           >
             Nuevo préstamo
           </button>
+          {prestamo.tieneContratoFirmado && (
+            <button
+              type="button"
+              onClick={handleVerContrato}
+              disabled={descargandoContrato}
+              className="h-9 px-3.5 text-xs font-medium rounded-lg border border-[#9C4A2B] text-[#9C4A2B] hover:bg-[#FFF4E6] transition cursor-pointer"
+            >
+              {descargandoContrato ? 'Descargando...' : '📄 Ver contrato firmado'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -149,7 +188,11 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           <div>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                esCancelado
+                prestamo.estado === 'EN_ESPERA'
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                  : prestamo.estado === 'ANULADO'
+                  ? 'bg-red-100 text-red-800 border border-red-300'
+                  : esCancelado
                   ? 'bg-slate-100 text-slate-600'
                   : prestamo.estado === 'VIGENTE'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -161,7 +204,19 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        {prestamo.estado === 'ANULADO' && prestamo.motivoAnulacion && (
+          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+            <strong>Motivo de anulación:</strong> {prestamo.motivoAnulacion}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-xs">
+          <div>
+            <span className="text-[#6E625B] block text-[11px]">N° Contrato</span>
+            <span className="font-mono font-bold text-[#2A2220] block">{prestamo.numeroContrato || '—'}</span>
+            <span className="text-[#6E625B] text-[11px]">{prestamo.impreso ? 'Impreso' : 'No impreso'}</span>
+          </div>
+
           <div>
             <span className="text-[#6E625B] block text-[11px]">Titular</span>
             <span className="font-medium text-[#2A2220] block">{prestamo.clienteNombre}</span>
@@ -203,7 +258,15 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           </p>
         </div>
 
-        {esCancelado ? (
+        {prestamo.estado === 'EN_ESPERA' ? (
+          <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+            ⚠️ Este crédito se encuentra <strong>EN ESPERA</strong> de formalización. No admite pagos ni cobranza en ventanilla.
+          </div>
+        ) : prestamo.estado === 'ANULADO' ? (
+          <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
+            ⚠️ Este crédito se encuentra <strong>ANULADO</strong>. No registra saldos ni admite operaciones.
+          </div>
+        ) : esCancelado ? (
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
             Este crédito se encuentra totalmente <strong>CANCELADO</strong>. No registra saldos pendientes.
           </div>
@@ -335,8 +398,47 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
                       {c.estado}
                     </span>
                   </td>
-                  <td className="py-2.5 px-4 text-center text-[#6E625B] font-mono text-[11px]">
-                    {c.pagoId ? `#${c.pagoId}` : '—'}
+                  <td className="py-2.5 px-4 text-center font-mono text-[11px]">
+                    {c.pagoId ? (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const detalle = await api.pago.obtener(c.pagoId);
+                            setComprobanteSeleccionado({
+                              ...detalle,
+                              clienteNombre: prestamo.clienteNombre,
+                              clienteDocumento: prestamo.clienteDni,
+                              prestamoId: prestamo.id,
+                              cuotaNumero: c.numero,
+                            });
+                          } catch {
+                            const pagoLocal = (pagos || []).find((p) => p.id === c.pagoId);
+                            setComprobanteSeleccionado({
+                              id: c.pagoId,
+                              monto: c.monto,
+                              montoCapital: c.capital,
+                              montoInteres: c.interes,
+                              cuotaNumero: c.numero,
+                              clienteNombre: prestamo.clienteNombre,
+                              clienteDocumento: prestamo.clienteDni,
+                              prestamoId: prestamo.id,
+                              fechaPago: pagoLocal?.fechaPago || c.fechaVencimiento,
+                              sucursalNombre: pagoLocal?.sucursalNombre || prestamo.sucursalNombre,
+                              asesorNombre: pagoLocal?.asesorNombre || prestamo.asesorNombre,
+                              numeroComprobante: pagoLocal?.numeroComprobante,
+                              tipoComprobante: pagoLocal?.tipoComprobante,
+                            });
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FFF4E6] text-[#9C4A2B] border border-[#E3D3C2] hover:bg-[#F1E4D6] transition cursor-pointer"
+                        title="Ver / Reimprimir comprobante"
+                      >
+                        <span>🖨️ {(pagos || []).find((p) => p.id === c.pagoId)?.numeroComprobante || `#${c.pagoId}`}</span>
+                      </button>
+                    ) : (
+                      <span className="text-[#6E625B]">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -344,6 +446,14 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           </table>
         </div>
       </div>
+
+      {/* Modal de Comprobante / Voucher de Pago */}
+      {comprobanteSeleccionado && (
+        <ComprobanteModal
+          pago={comprobanteSeleccionado}
+          onCerrar={() => setComprobanteSeleccionado(null)}
+        />
+      )}
     </div>
   );
 }

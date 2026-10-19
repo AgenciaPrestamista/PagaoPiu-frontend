@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
+import ComprobanteModal from './ComprobanteModal';
 
 export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalleCompleto }) {
   const [criterioBusqueda, setCriterioBusqueda] = useState('');
@@ -7,6 +8,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
   const [prestamosEncontrados, setPrestamosEncontrados] = useState([]);
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState(null);
   const [pagos, setPagos] = useState([]);
+  const [comprobanteSeleccionado, setComprobanteSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [procesandoPago, setProcesandoPago] = useState(false);
   const [mensajeExito, setMensajeExito] = useState('');
@@ -169,8 +171,16 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
     try {
       const pago = await api.pago.pagarCuota(prestamoSeleccionado.id);
       setMensajeExito(
-        `✓ Recibo N° ${pago.id} emitido con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} en Agencia ${pago.sucursalNombre} por el asesor ${pago.asesorNombre}.`
+        `✓ Comprobante ${pago.numeroComprobante || '#' + pago.id} emitido con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} en Agencia ${pago.sucursalNombre} por el asesor ${pago.asesorNombre}.`
       );
+
+      // Mostrar modal de comprobante inmediatamente
+      setComprobanteSeleccionado({
+        ...pago,
+        clienteNombre: prestamoSeleccionado.clienteNombre,
+        clienteDocumento: prestamoSeleccionado.clienteDni,
+        prestamoId: prestamoSeleccionado.id,
+      });
 
       // Recargar datos actualizados
       const prestamoActualizado = await api.prestamo.obtener(prestamoSeleccionado.id);
@@ -211,8 +221,16 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
     try {
       const pago = await api.pago.cancelarAnticipado(prestamoSeleccionado.id);
       setMensajeExito(
-        `✓ Cancelación anticipada procesada con éxito. Recibo N° ${pago.id}. Monto total liquidado: S/ ${Number(pago.monto).toFixed(2)} en Agencia ${pago.sucursalNombre}.`
+        `✓ Cancelación anticipada procesada con éxito. Comprobante ${pago.numeroComprobante || '#' + pago.id}. Monto total liquidado: S/ ${Number(pago.monto).toFixed(2)}.`
       );
+
+      // Mostrar modal de comprobante
+      setComprobanteSeleccionado({
+        ...pago,
+        clienteNombre: prestamoSeleccionado.clienteNombre,
+        clienteDocumento: prestamoSeleccionado.clienteDni,
+        prestamoId: prestamoSeleccionado.id,
+      });
 
       const prestamoActualizado = await api.prestamo.obtener(prestamoSeleccionado.id);
       const pagosActualizados = await api.pago.listarPorPrestamo(prestamoSeleccionado.id);
@@ -378,7 +396,10 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                     p.estado === 'VIGENTE' ? 'bg-emerald-100 text-emerald-800' :
                     p.estado === 'MOROSO' ? 'bg-amber-100 text-amber-800' :
-                    p.estado === 'EXTRAJUDICIAL' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-700'
+                    p.estado === 'EXTRAJUDICIAL' ? 'bg-red-100 text-red-800' :
+                    p.estado === 'EN_ESPERA' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                    p.estado === 'ANULADO' ? 'bg-gray-100 text-gray-700' :
+                    'bg-slate-100 text-slate-700'
                   }`}>
                     {p.estado}
                   </span>
@@ -416,6 +437,8 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
 
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                  prestamoSeleccionado.estado === 'EN_ESPERA' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                  prestamoSeleccionado.estado === 'ANULADO' ? 'bg-red-100 text-red-800 border border-red-300' :
                   esCancelado ? 'bg-slate-100 text-slate-700' :
                   esMoroso ? 'bg-amber-100 text-amber-800 border border-amber-300' :
                   esExtrajudicial ? 'bg-red-100 text-red-800 border border-red-300' :
@@ -483,7 +506,21 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
               </div>
             </div>
 
-            {esCancelado ? (
+            {prestamoSeleccionado.estado === 'EN_ESPERA' ? (
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                <div className="font-bold mb-1">⚠️ PRÉSTAMO EN ESPERA DE CONTRATO FIRMADO</div>
+                <p>
+                  Este crédito se encuentra en estado <strong>EN_ESPERA</strong> ({prestamoSeleccionado.numeroContrato || 'sin contrato'}). No admite pagos en ventanilla hasta ser formalizado con la subida del contrato firmado.
+                </p>
+              </div>
+            ) : prestamoSeleccionado.estado === 'ANULADO' ? (
+              <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
+                <div className="font-bold mb-1">⚠️ PRÉSTAMO ANULADO</div>
+                <p>
+                  Este préstamo fue <strong>ANULADO</strong>{prestamoSeleccionado.motivoAnulacion ? `: ${prestamoSeleccionado.motivoAnulacion}` : ''}. No registra saldos pendientes ni admite operaciones de cobranza.
+                </p>
+              </div>
+            ) : esCancelado ? (
               <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700">
                 ✓ Este crédito se encuentra totalmente <strong>CANCELADO</strong>. No registra saldos pendientes de cobro.
               </div>
@@ -624,18 +661,25 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-[#F1E4D6] border-b border-[#E3D3C2] text-[11px] font-semibold text-[#2A2220] uppercase tracking-wider">
-                      <th className="py-2.5 px-4 text-center">N° Recibo</th>
+                      <th className="py-2.5 px-4 text-center">N° Comprobante</th>
                       <th className="py-2.5 px-4">Fecha</th>
                       <th className="py-2.5 px-4">Tipo</th>
                       <th className="py-2.5 px-4 text-end">Monto cobrado</th>
                       <th className="py-2.5 px-4">Agencia recaudadora</th>
                       <th className="py-2.5 px-4">Asesor</th>
+                      <th className="py-2.5 px-4 text-center no-print">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E3D3C2]/40">
                     {pagos.map((p) => (
                       <tr key={p.id} className="hover:bg-[#FBF6F0]/60 transition">
-                        <td className="py-2 px-4 text-center font-mono font-bold text-[#2A2220]">#{p.id}</td>
+                        <td className="py-2 px-4 text-center font-mono font-bold text-[#2A2220]">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${
+                            p.tipoComprobante === 'FACTURA' ? 'bg-indigo-50 text-indigo-800 border border-indigo-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}>
+                            {p.numeroComprobante || `#${p.id}`}
+                          </span>
+                        </td>
                         <td className="py-2 px-4 text-[#6E625B] font-mono">{p.fechaPago}</td>
                         <td className="py-2 px-4">
                           <span className="text-[11px] font-medium text-[#2A2220]">
@@ -647,6 +691,20 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                         </td>
                         <td className="py-2 px-4 text-[#6E625B] font-medium">{p.sucursalNombre}</td>
                         <td className="py-2 px-4 text-[#6E625B]">{p.asesorNombre}</td>
+                        <td className="py-2 px-4 text-center no-print">
+                          <button
+                            type="button"
+                            onClick={() => setComprobanteSeleccionado({
+                              ...p,
+                              clienteNombre: prestamoSeleccionado?.clienteNombre,
+                              clienteDocumento: prestamoSeleccionado?.clienteDni,
+                              prestamoId: prestamoSeleccionado?.id,
+                            })}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer shadow-2xs"
+                          >
+                            <span>🖨️ Ver</span>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -655,6 +713,14 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
             </div>
           )}
         </div>
+      )}
+
+      {/* Modal de Comprobante / Voucher de Pago */}
+      {comprobanteSeleccionado && (
+        <ComprobanteModal
+          pago={comprobanteSeleccionado}
+          onCerrar={() => setComprobanteSeleccionado(null)}
+        />
       )}
     </div>
   );
