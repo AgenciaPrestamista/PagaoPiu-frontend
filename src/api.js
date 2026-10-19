@@ -100,6 +100,16 @@ export const api = {
       }
       return await response.blob();
     },
+    firmaGerenteBlob: async () => {
+      const response = await fetch(`${BASE_URL}/contratos/firma-gerente`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        return null;
+      }
+      return await response.blob();
+    },
   },
   pago: {
     pagarCuota: (prestamoId) =>
@@ -117,3 +127,5 @@ export const api = {
     obtener: () => request('/panel'),
   },
 };
+
+api.contrato = api.contratos;

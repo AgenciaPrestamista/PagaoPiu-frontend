@@ -18,14 +18,27 @@ body {
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
   body {
     background-color: #FFFFFF !important;
     color: #000000 !important;
   }
-  header, nav, aside, button, .no-print {
+
+  header, nav, aside, button, .no-print,
+  body.imprimiendo-contrato header,
+  body.imprimiendo-contrato nav,
+  body.imprimiendo-contrato aside,
+  body.imprimiendo-contrato button,
+  body.imprimiendo-contrato .no-print {
     display: none !important;
   }
-  .printable-contract, .printable-comprobante {
+
+  .printable-contract, .printable-comprobante,
+  body.imprimiendo-contrato #contrato-imprimible {
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -34,5 +47,15 @@ body {
     background: #FFFFFF !important;
     box-shadow: none !important;
     border: none !important;
+  }
+
+  .page-break-before {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+
+  .avoid-break-inside {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

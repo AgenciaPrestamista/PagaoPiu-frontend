@@ -598,6 +598,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                   <tr className="bg-[#F1E4D6] border-b border-[#E3D3C2] text-[11px] font-semibold text-[#2A2220] uppercase tracking-wider">
                     <th className="py-2.5 px-4 text-center">N°</th>
                     <th className="py-2.5 px-4">Vencimiento</th>
+                    <th className="py-2.5 px-4 text-end">Saldo inicial</th>
                     <th className="py-2.5 px-4 text-end">Capital</th>
                     <th className="py-2.5 px-4 text-end">Interés</th>
                     <th className="py-2.5 px-4 text-end">Cuota fija</th>
@@ -631,6 +632,9 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                               (Vencida)
                             </span>
                           )}
+                        </td>
+                        <td className="py-2 px-4 text-end font-mono">
+                          S/ {(c.saldoInicial != null ? Number(c.saldoInicial) : ((Number(c.saldoCapital) || 0) + (Number(c.capital) || 0))).toFixed(2)}
                         </td>
                         <td className="py-2 px-4 text-end font-mono">S/ {Number(c.capital).toFixed(2)}</td>
                         <td className="py-2 px-4 text-end font-mono">S/ {Number(c.interes).toFixed(2)}</td>

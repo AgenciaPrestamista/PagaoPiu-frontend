@@ -220,7 +220,9 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           <div>
             <span className="text-[#6E625B] block text-[11px]">Titular</span>
             <span className="font-medium text-[#2A2220] block">{prestamo.clienteNombre}</span>
-            <span className="text-[#6E625B] font-mono text-[11px]">DNI {prestamo.clienteDni}</span>
+            <span className="text-[#6E625B] font-mono text-[11px]">
+              {(prestamo.clienteDni || '').length === 11 ? 'RUC' : 'DNI'} {prestamo.clienteDni}
+            </span>
           </div>
 
           <div>
@@ -362,10 +364,11 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
               <tr className="bg-[#F1E4D6] border-b border-[#E3D3C2] text-[11px] font-semibold text-[#2A2220] uppercase tracking-wider">
                 <th className="py-2.5 px-4 text-center">N°</th>
                 <th className="py-2.5 px-4">Vencimiento</th>
+                <th className="py-2.5 px-4 text-end">Saldo Inicial (S/)</th>
                 <th className="py-2.5 px-4 text-end">Cuota (S/)</th>
                 <th className="py-2.5 px-4 text-end">Interés (S/)</th>
                 <th className="py-2.5 px-4 text-end">Capital (S/)</th>
-                <th className="py-2.5 px-4 text-end">Saldo (S/)</th>
+                <th className="py-2.5 px-4 text-end">Saldo Capital (S/)</th>
                 <th className="py-2.5 px-4 text-center">Estado</th>
                 <th className="py-2.5 px-4 text-center">Comprobante</th>
               </tr>
@@ -375,6 +378,9 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
                 <tr key={c.numero} className="hover:bg-[#FFF4E6]/40 transition">
                   <td className="py-2.5 px-4 text-center font-mono font-medium text-[#2A2220]">{c.numero}</td>
                   <td className="py-2.5 px-4 text-[#6E625B]">{c.fechaVencimiento}</td>
+                  <td className="py-2.5 px-4 text-end font-mono text-[#2A2220]">
+                    S/ {(c.saldoInicial != null ? Number(c.saldoInicial) : ((Number(c.saldoCapital) || 0) + (Number(c.capital) || 0))).toFixed(2)}
+                  </td>
                   <td className="py-2.5 px-4 text-end font-mono font-semibold text-[#2A2220]">
                     S/ {Number(c.monto).toFixed(2)}
                   </td>

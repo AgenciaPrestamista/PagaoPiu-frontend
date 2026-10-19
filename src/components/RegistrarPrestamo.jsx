@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
+import ContratoImpreso from './ContratoImpreso';
 
 const EDAD_MINIMA = 18;
 const EDAD_MAXIMA = 80;
@@ -327,9 +328,16 @@ export default function RegistrarPrestamo({
     try {
       const contratoActualizado = await api.contratos.imprimir(contrato.id);
       setContrato((prev) => ({ ...prev, impreso: true, estado: contratoActualizado.estado }));
+      document.body.classList.add('imprimiendo-contrato');
+      const cleanup = () => {
+        document.body.classList.remove('imprimiendo-contrato');
+        window.removeEventListener('afterprint', cleanup);
+      };
+      window.addEventListener('afterprint', cleanup);
       window.print();
       setPaso(3);
     } catch (err) {
+      document.body.classList.remove('imprimiendo-contrato');
       setError(err.message || 'Error al registrar la impresión del contrato');
     }
   };
@@ -856,10 +864,11 @@ export default function RegistrarPrestamo({
                     <tr className="bg-[#F1E4D6] border-b border-[#E3D3C2] text-[11px] font-semibold text-[#2A2220] uppercase tracking-wider">
                       <th className="py-2.5 px-4 text-center">N°</th>
                       <th className="py-2.5 px-4">Vencimiento</th>
+                      <th className="py-2.5 px-4 text-end">Saldo Inicial (S/)</th>
                       <th className="py-2.5 px-4 text-end">Cuota (S/)</th>
                       <th className="py-2.5 px-4 text-end">Interés (S/)</th>
                       <th className="py-2.5 px-4 text-end">Capital (S/)</th>
-                      <th className="py-2.5 px-4 text-end">Saldo (S/)</th>
+                      <th className="py-2.5 px-4 text-end">Saldo Capital (S/)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E3D3C2]/40">
@@ -867,6 +876,7 @@ export default function RegistrarPrestamo({
                       <tr key={c.numero} className="hover:bg-[#FFF4E6]/40 transition">
                         <td className="py-2 px-4 text-center font-mono font-medium text-[#2A2220]">{c.numero}</td>
                         <td className="py-2 px-4 text-[#6E625B]">{c.fechaVencimiento}</td>
+                        <td className="py-2 px-4 text-end font-mono text-[#2A2220]">{c.saldoInicial != null ? Number(c.saldoInicial).toFixed(2) : '-'}</td>
                         <td className="py-2 px-4 text-end font-mono font-medium text-[#2A2220]">{Number(c.monto).toFixed(2)}</td>
                         <td className="py-2 px-4 text-end font-mono text-[#6E625B]">{Number(c.interes).toFixed(2)}</td>
                         <td className="py-2 px-4 text-end font-mono text-[#2A2220]">{Number(c.capital).toFixed(2)}</td>
@@ -918,432 +928,7 @@ export default function RegistrarPrestamo({
           </div>
 
           {/* Documento Imprimible del Contrato */}
-          {(() => {
-            const cuotasLista = contrato.cuotas || [];
-            const totalIntereses = cuotasLista.reduce((acc, c) => acc + (Number(c.interes) || 0), 0);
-            const totalPagar = cuotasLista.reduce((acc, c) => acc + (Number(c.monto) || 0), 0);
-            const primeraCuotaFecha = cuotasLista[0]?.fechaVencimiento || '-';
-            const ultimaCuotaFecha = cuotasLista[cuotasLista.length - 1]?.fechaVencimiento || '-';
-            const esJuridica = (contrato.clienteDni || '').length === 11;
-            const ciudad = contrato.sucursalNombre || 'Trujillo';
-            const prestamoCodigo = `PRE-${String(contrato.id).padStart(6, '0')}`;
-
-            return (
-              <div id="contrato-imprimible" className="printable-contract bg-white rounded-xl border border-[#E3D3C2] p-8 sm:p-12 shadow-2xs text-[#2A2220] font-sans text-xs leading-relaxed">
-                {/* Encabezado Principal */}
-                <div className="text-center pb-5 border-b-2 border-[#2A2220] mb-6">
-                  <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-wide uppercase">
-                    MODELO DE CONTRATO DE PRÉSTAMO DE DINERO
-                  </h1>
-                  <h2 className="text-sm sm:text-base font-semibold text-[#6E625B] mt-1 italic">
-                    Contrato de mutuo dinerario
-                  </h2>
-                  <div className="mt-4 flex flex-wrap justify-between items-center text-xs font-mono border-t border-gray-200 pt-3 text-gray-700">
-                    <div><strong>N.º de contrato:</strong> {contrato.numeroContrato}</div>
-                    <div><strong>Fecha de celebración:</strong> {contrato.fechaPrestamo}</div>
-                    <div><strong>Lugar:</strong> {ciudad}, Perú</div>
-                  </div>
-                </div>
-
-                <p className="mb-4 text-justify">
-                  Conste por el presente documento el contrato de mutuo dinerario celebrado entre las siguientes partes:
-                </p>
-
-                {/* PRIMERA: EL PRESTAMISTA */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    PRIMERA: IDENTIFICACIÓN DEL PRESTAMISTA
-                  </h3>
-                  <p className="mb-1 text-justify">
-                    EL PRESTAMISTA es la empresa que otorga el préstamo y cuyos datos son:
-                  </p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-2 text-gray-800">
-                    <li><strong>Razón social:</strong> PRÉSTAMOS DEL NORTE S.A.C. / PagaOPiu Financiera</li>
-                    <li><strong>RUC:</strong> 20123456789</li>
-                    <li><strong>Domicilio fiscal:</strong> Av. Principal 123, Trujillo, La Libertad</li>
-                    <li><strong>Representante legal / Asesor:</strong> {contrato.asesorNombre || 'Asesor Comercial Autorizado'} (Agencia {contrato.sucursalNombre})</li>
-                    <li><strong>DNI del representante:</strong> 41238901</li>
-                  </ul>
-                  <p className="mt-1 italic text-gray-600">En adelante, se denominará EL PRESTAMISTA.</p>
-                </div>
-
-                {/* SEGUNDA: EL PRESTATARIO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    SEGUNDA: IDENTIFICACIÓN DEL PRESTATARIO
-                  </h3>
-                  <p className="mb-1 text-justify">
-                    Para identificar al cliente, se utilizará la sección que corresponda según su tipo:
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                    <div className={`p-3 rounded-lg border ${!esJuridica ? 'border-[#9C4A2B] bg-[#FFF4E6]/30' : 'border-gray-200 bg-gray-50/50 opacity-60'}`}>
-                      <div className="font-bold text-[11px] uppercase mb-1">A. Si el prestatario es una persona natural {!esJuridica && '(Aplica)'}</div>
-                      <ul className="list-disc list-inside space-y-0.5 ml-1">
-                        <li><strong>Nombres y apellidos:</strong> {!esJuridica ? contrato.clienteNombre : '-'}</li>
-                        <li><strong>DNI o doc. identidad:</strong> {!esJuridica ? contrato.clienteDni : '-'}</li>
-                        <li><strong>RUC, si corresponde:</strong> No aplica</li>
-                        <li><strong>Domicilio:</strong> Dirección registrada en RENIEC / Trujillo</li>
-                        <li><strong>Teléfono:</strong> 944-123456</li>
-                        <li><strong>Correo electrónico:</strong> cliente@email.com</li>
-                      </ul>
-                    </div>
-
-                    <div className={`p-3 rounded-lg border ${esJuridica ? 'border-[#9C4A2B] bg-[#FFF4E6]/30' : 'border-gray-200 bg-gray-50/50 opacity-60'}`}>
-                      <div className="font-bold text-[11px] uppercase mb-1">B. Si el prestatario es una persona jurídica {esJuridica && '(Aplica)'}</div>
-                      <ul className="list-disc list-inside space-y-0.5 ml-1">
-                        <li><strong>Razón social:</strong> {esJuridica ? contrato.clienteNombre : '-'}</li>
-                        <li><strong>RUC:</strong> {esJuridica ? contrato.clienteDni : '-'}</li>
-                        <li><strong>Domicilio fiscal:</strong> {esJuridica ? (direccionEmpresa || 'Dirección fiscal registrada en SUNAT') : '-'}</li>
-                        <li><strong>Representante legal / Encargado:</strong> {esJuridica ? (representanteLegal || 'Representante Legal debidamente facultado') : '-'}</li>
-                        <li><strong>DNI del representante:</strong> {esJuridica ? (dniRepresentante || '-') : '-'}</li>
-                        <li><strong>Cargo del representante:</strong> {esJuridica ? (cargoRepresentante || 'Gerente General') : '-'}</li>
-                        <li><strong>Inscripción registral:</strong> Partida Electrónica N.° 11029384</li>
-                      </ul>
-                    </div>
-                  </div>
-                  <p className="mt-1.5 italic text-gray-600">En adelante, cualquiera de los dos tipos de cliente se denominará EL PRESTATARIO.</p>
-                </div>
-
-                <p className="mb-4 text-justify font-medium">
-                  Ambas partes acuerdan celebrar el presente contrato conforme a las siguientes cláusulas:
-                </p>
-
-                {/* TERCERA: OBJETO DEL CONTRATO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    TERCERA: OBJETO DEL CONTRATO
-                  </h3>
-                  <p className="text-justify mb-1">
-                    EL PRESTAMISTA se compromete a entregar a EL PRESTATARIO una cantidad determinada de dinero en calidad de préstamo.
-                  </p>
-                  <p className="text-justify">
-                    EL PRESTATARIO se obliga a devolver el capital recibido y pagar los intereses y demás conceptos que correspondan, de acuerdo con las condiciones pactadas en el presente contrato y la legislación aplicable.
-                  </p>
-                </div>
-
-                {/* CUARTA: MONTO Y DESEMBOLSO DEL PRÉSTAMO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    CUARTA: MONTO Y DESEMBOLSO DEL PRÉSTAMO
-                  </h3>
-                  <p className="mb-2 text-justify">
-                    Las partes establecen las siguientes condiciones:
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300 text-xs">
-                      <thead>
-                        <tr className="bg-gray-100 border-b border-gray-300 text-left">
-                          <th className="p-2 border-r border-gray-300 font-bold w-1/3">Concepto</th>
-                          <th className="p-2 font-bold">Información</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Código del préstamo</td>
-                          <td className="p-2 font-mono font-bold">{prestamoCodigo}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Capital prestado</td>
-                          <td className="p-2 font-mono font-bold">S/ {Number(contrato.capital).toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Moneda</td>
-                          <td className="p-2">Soles peruanos (PEN)</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Fecha de desembolso</td>
-                          <td className="p-2 font-mono">{contrato.fechaPrestamo}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Medio de desembolso</td>
-                          <td className="p-2">Transferencia bancaria / Abono en cuenta / Efectivo en ventanilla</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Plazo</td>
-                          <td className="p-2 font-bold">{contrato.plazoMeses} meses</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Destino del préstamo</td>
-                          <td className="p-2">Libre disponibilidad / Capital de trabajo</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="mt-1.5 text-justify italic text-gray-600">
-                    EL PRESTAMISTA dejará constancia del desembolso mediante el registro o documento que corresponda.
-                  </p>
-                </div>
-
-                {/* QUINTA: INTERESES Y CONDICIONES FINANCIERAS */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    QUINTA: INTERESES Y CONDICIONES FINANCIERAS
-                  </h3>
-                  <p className="mb-2 text-justify">
-                    El préstamo tendrá las siguientes condiciones financieras:
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300 text-xs">
-                      <thead>
-                        <tr className="bg-gray-100 border-b border-gray-300 text-left">
-                          <th className="p-2 border-r border-gray-300 font-bold w-1/3">Concepto</th>
-                          <th className="p-2 font-bold">Detalle</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Tasa de interés compensatorio</td>
-                          <td className="p-2 font-bold">{(Number(contrato.tea) * 100).toFixed(2)}% (TEA) / 2.2104% (TEM ref.)</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Periodicidad de la tasa</td>
-                          <td className="p-2">Anual (TEA) con capitalización mensual</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Método de amortización</td>
-                          <td className="p-2 font-semibold">Sistema Francés (cuotas mensuales fijas)</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Número de cuotas</td>
-                          <td className="p-2 font-bold">{contrato.plazoMeses} cuotas</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Importe estimado de cada cuota</td>
-                          <td className="p-2 font-mono font-bold">S/ {Number(contrato.cuotaFija).toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Intereses totales estimados</td>
-                          <td className="p-2 font-mono font-bold">S/ {totalIntereses.toFixed(2)}</td>
-                        </tr>
-                        <tr>
-                          <td className="p-2 border-r border-gray-300 font-medium">Otros cargos aplicables, si corresponden</td>
-                          <td className="p-2 font-mono">S/ 0.00 (Sin comisiones ocultas)</td>
-                        </tr>
-                        <tr className="bg-amber-50/50">
-                          <td className="p-2 border-r border-gray-300 font-bold">Total estimado por pagar</td>
-                          <td className="p-2 font-mono font-bold text-[#9C4A2B]">S/ {totalPagar.toFixed(2)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="mt-1.5 text-justify italic text-gray-600">
-                    Las condiciones financieras deberán respetar los límites y las disposiciones legales aplicables. Las tasas, los cargos y el costo total del préstamo deberán comunicarse al prestatario de manera clara.
-                  </p>
-                </div>
-
-                {/* SEXTA: PLAZO Y FORMA DE PAGO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    SEXTA: PLAZO Y FORMA DE PAGO
-                  </h3>
-                  <p className="text-justify mb-1">
-                    EL PRESTATARIO devolverá el préstamo mediante <strong>{contrato.plazoMeses}</strong> cuotas, de acuerdo con el cronograma de pagos incorporado como <strong>ANEXO 1</strong>, que forma parte integrante del presente contrato.
-                  </p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-2">
-                    <li><strong>Primera cuota:</strong> {primeraCuotaFecha}</li>
-                    <li><strong>Última cuota:</strong> {ultimaCuotaFecha}</li>
-                    <li><strong>Frecuencia de pago:</strong> Mensual</li>
-                    <li><strong>Medio de pago:</strong> En ventanilla de agencias autorizadas o transferencia bancaria</li>
-                  </ul>
-                  <p className="mt-1 text-justify text-gray-600">
-                    Cada cuota detallará el capital amortizado, los intereses y los demás conceptos aplicables, así como el saldo pendiente.
-                  </p>
-                </div>
-
-                {/* SÉPTIMA: INCUMPLIMIENTO DE PAGO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    SÉPTIMA: INCUMPLIMIENTO DE PAGO
-                  </h3>
-                  <p className="text-justify mb-1">
-                    Si EL PRESTATARIO incumple las fechas de pago, se aplicarán las consecuencias previstas en el contrato, respetando la legislación vigente.
-                  </p>
-                  <p className="text-justify text-gray-600">
-                    Los intereses moratorios y otros cargos, cuando correspondan, deberán estar debidamente establecidos y no podrán exceder los límites legales aplicables fijados por el Banco Central de Reserva del Perú (BCRP).
-                  </p>
-                </div>
-
-                {/* OCTAVA: PAGO ANTICIPADO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    OCTAVA: PAGO ANTICIPADO
-                  </h3>
-                  <p className="text-justify mb-1">
-                    EL PRESTATARIO podrá efectuar pagos anticipados o cancelar el saldo pendiente antes del vencimiento, conforme a las condiciones pactadas y las disposiciones legales aplicables, con la consiguiente liquidación y reducción de intereses compensatorios al día de la cancelación.
-                  </p>
-                  <p className="text-justify text-gray-600">
-                    Cuando corresponda, EL PRESTAMISTA actualizará el saldo pendiente y los intereses del préstamo emitiendo la liquidación respectiva.
-                  </p>
-                </div>
-
-                {/* NOVENA: OBLIGACIONES DE LAS PARTES */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    NOVENA: OBLIGACIONES DE LAS PARTES
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-                    <div className="p-2.5 rounded border border-gray-200 bg-gray-50/50">
-                      <div className="font-bold text-[11px] text-gray-800 mb-1">Obligaciones de EL PRESTAMISTA:</div>
-                      <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
-                        <li>Entregar el dinero conforme a las condiciones pactadas.</li>
-                        <li>Proporcionar información clara sobre el préstamo.</li>
-                        <li>Registrar los pagos realizados.</li>
-                        <li>Mantener disponible el estado de cuenta del préstamo.</li>
-                        <li>Emitir los comprobantes y las constancias que correspondan conforme a la normativa aplicable.</li>
-                      </ol>
-                    </div>
-                    <div className="p-2.5 rounded border border-gray-200 bg-gray-50/50">
-                      <div className="font-bold text-[11px] text-gray-800 mb-1">Obligaciones de EL PRESTATARIO:</div>
-                      <ol className="list-decimal list-inside space-y-0.5 text-gray-700">
-                        <li>Proporcionar información veraz.</li>
-                        <li>Cumplir con las condiciones pactadas.</li>
-                        <li>Efectuar los pagos dentro de los plazos establecidos.</li>
-                        <li>Comunicar cualquier cambio de información relevante para la gestión del préstamo.</li>
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-
-                {/* DÉCIMA: COMPROBANTES Y CONSTANCIAS DE PAGO */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    DÉCIMA: COMPROBANTES Y CONSTANCIAS DE PAGO
-                  </h3>
-                  <p className="text-justify mb-1">
-                    EL PRESTAMISTA registrará los pagos realizados y emitirá los comprobantes de pago que correspondan conforme a las disposiciones tributarias aplicables (Boleta de Venta Electrónica para personas naturales o Factura Electrónica para personas jurídicas).
-                  </p>
-                  <p className="text-justify text-gray-600">
-                    Los comprobantes, cuando sean exigibles, deberán reflejar correctamente la operación realizada y el desglose de intereses y amortización.
-                  </p>
-                </div>
-
-                {/* DÉCIMA PRIMERA: TRATAMIENTO DE DATOS PERSONALES */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    DÉCIMA PRIMERA: TRATAMIENTO DE DATOS PERSONALES
-                  </h3>
-                  <p className="text-justify text-gray-700">
-                    Los datos recopilados para la gestión del préstamo serán tratados conforme a la legislación peruana de protección de datos personales (Ley N.° 29733) y para las finalidades legítimas relacionadas con la operación financiera y crediticia.
-                  </p>
-                </div>
-
-                {/* DÉCIMA SEGUNDA: RESOLUCIÓN DE CONTROVERSIAS */}
-                <div className="mb-4">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    DÉCIMA SEGUNDA: RESOLUCIÓN DE CONTROVERSIAS
-                  </h3>
-                  <p className="text-justify text-gray-700">
-                    Las partes procurarán resolver de manera directa cualquier controversia relacionada con el presente contrato. De no alcanzar un acuerdo, procederán conforme a los mecanismos legalmente aplicables sometiéndose a la competencia de los jueces y tribunales del distrito judicial de {ciudad}.
-                  </p>
-                </div>
-
-                {/* DÉCIMA TERCERA: ACEPTACIÓN Y FIRMA */}
-                <div className="mb-8">
-                  <h3 className="font-bold uppercase tracking-wide text-[11px] text-[#9C4A2B] mb-1">
-                    DÉCIMA TERCERA: ACEPTACIÓN Y FIRMA
-                  </h3>
-                  <p className="text-justify mb-2">
-                    Las partes declaran haber leído y comprendido las condiciones del presente contrato y manifiestan su conformidad con ellas firmándolo en señal de aceptación.
-                  </p>
-                  <p className="font-mono text-[11px] text-gray-600 mb-8">
-                    Lugar y fecha: {ciudad}, {contrato.fechaPrestamo}.
-                  </p>
-
-                  {/* Firmas */}
-                  <div className="pt-10 grid grid-cols-2 gap-8 text-center text-xs">
-                    <div className="border border-gray-300 rounded-lg p-4 bg-gray-50/30">
-                      <div className="font-bold uppercase text-[11px] text-gray-500 mb-12">EL PRESTAMISTA</div>
-                      <div className="border-t border-gray-800 mx-4 pt-2">
-                        <div className="font-bold text-sm">Firma: ________________________</div>
-                        <div className="mt-2 text-gray-700 font-medium">Empresa: PRÉSTAMOS DEL NORTE S.A.C.</div>
-                        <div className="text-gray-600">Representante: {contrato.asesorNombre || 'Asesor Comercial'}</div>
-                        <div className="text-gray-600 font-mono">DNI: 41238901</div>
-                      </div>
-                    </div>
-
-                    <div className="border border-gray-300 rounded-lg p-4 bg-gray-50/30">
-                      <div className="font-bold uppercase text-[11px] text-gray-500 mb-12">EL PRESTATARIO</div>
-                      <div className="border-t border-gray-800 mx-4 pt-2">
-                        <div className="font-bold text-sm">Firma: ________________________</div>
-                        <div className="mt-2 text-gray-700 font-medium">
-                          {esJuridica ? 'Razón Social: ' : 'Nombre: '}
-                          {contrato.clienteNombre}
-                        </div>
-                        <div className="text-gray-600 font-mono">
-                          {esJuridica ? 'RUC: ' : 'DNI: '}
-                          {contrato.clienteDni}
-                        </div>
-                        {esJuridica ? (
-                          <>
-                            <div className="text-gray-800 font-semibold mt-1">
-                              Representante: {representanteLegal || 'Representante Legal'}
-                            </div>
-                            {dniRepresentante && (
-                              <div className="text-gray-600 font-mono">
-                                DNI Rep.: {dniRepresentante}
-                              </div>
-                            )}
-                            <div className="text-gray-600 text-[11px]">
-                              Cargo: {cargoRepresentante || 'Gerente General'}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-gray-600">Calidad: Titular</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ANEXO 1. CRONOGRAMA DE PAGOS */}
-                <div className="pt-6 border-t-2 border-[#2A2220] page-break-before">
-                  <div className="text-center mb-4">
-                    <h2 className="text-base font-serif font-bold uppercase tracking-wider">
-                      ANEXO 1. CRONOGRAMA DE PAGOS
-                    </h2>
-                    <p className="text-xs text-gray-500 italic mt-0.5">
-                      Este anexo se genera automáticamente a partir de las condiciones financieras registradas en el sistema.
-                    </p>
-                  </div>
-
-                  <table className="w-full text-left border-collapse text-xs border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-100 border-b border-gray-300 text-[11px] font-bold uppercase">
-                        <th className="py-2 px-3 border-r border-gray-300 text-center">N°</th>
-                        <th className="py-2 px-3 border-r border-gray-300">Vencimiento</th>
-                        <th className="py-2 px-3 border-r border-gray-300 text-end">Cuota (S/)</th>
-                        <th className="py-2 px-3 border-r border-gray-300 text-end">Interés (S/)</th>
-                        <th className="py-2 px-3 border-r border-gray-300 text-end">Capital (S/)</th>
-                        <th className="py-2 px-3 text-end">Saldo Capital (S/)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {cuotasLista.map((c) => (
-                        <tr key={c.numero}>
-                          <td className="py-1.5 px-3 text-center font-mono border-r border-gray-300">{c.numero}</td>
-                          <td className="py-1.5 px-3 border-r border-gray-300 font-mono">{c.fechaVencimiento}</td>
-                          <td className="py-1.5 px-3 text-end font-mono font-bold border-r border-gray-300">{Number(c.monto).toFixed(2)}</td>
-                          <td className="py-1.5 px-3 text-end font-mono border-r border-gray-300">{Number(c.interes).toFixed(2)}</td>
-                          <td className="py-1.5 px-3 text-end font-mono border-r border-gray-300">{Number(c.capital).toFixed(2)}</td>
-                          <td className="py-1.5 px-3 text-end font-mono">{Number(c.saldoCapital).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="bg-gray-100 font-bold border-t border-gray-300 text-[11px]">
-                        <td colSpan={2} className="py-2 px-3 text-end uppercase border-r border-gray-300">Totales:</td>
-                        <td className="py-2 px-3 text-end font-mono border-r border-gray-300">S/ {totalPagar.toFixed(2)}</td>
-                        <td className="py-2 px-3 text-end font-mono border-r border-gray-300">S/ {totalIntereses.toFixed(2)}</td>
-                        <td className="py-2 px-3 text-end font-mono border-r border-gray-300">S/ {Number(contrato.capital).toFixed(2)}</td>
-                        <td className="py-2 px-3 text-end font-mono">-</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              </div>
-            );
-          })()}
+          <ContratoImpreso contrato={contrato} />
         </div>
       )}
 
