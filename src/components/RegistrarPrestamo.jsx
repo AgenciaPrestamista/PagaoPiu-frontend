@@ -284,6 +284,10 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
       setPaso(1);
       setExito(contrato.impreso ? 'El contrato ha sido ANULADO formalmente.' : 'El borrador de contrato fue descartado.');
     } catch (err) {
+      if (err.message && err.message.toLowerCase().includes('motivo de anulación')) {
+        setContrato((prev) => ({ ...prev, impreso: true }));
+        setMostrarModalCancelar(true);
+      }
       setError(err.message || 'Error al cancelar contrato');
     } finally {
       setProcesando(false);
