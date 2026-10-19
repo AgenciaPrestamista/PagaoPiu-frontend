@@ -41,9 +41,12 @@ const obtenerFechaMinima80 = () => {
 export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacInicial, onPrestamoRegistrado, onCancelar }) {
   const fechaMaxima18 = obtenerFechaMaxima18();
   const fechaMinima80 = obtenerFechaMinima80();
+  const [tipoDocumento, setTipoDocumento] = useState(
+    dniInicial && dniInicial.length === 11 ? 'RUC' : 'DNI'
+  );
   const [dni, setDni] = useState(dniInicial || '');
   const [nombreCliente, setNombreCliente] = useState(nombreInicial || '');
-  const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || '');
+  const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || (dniInicial && dniInicial.length === 11 ? '2015-01-01' : ''));
   const [edadCliente, setEdadCliente] = useState(fechaNacInicial ? calcularEdad(fechaNacInicial) : null);
   const [fechaPrestamo] = useState(obtenerHoyLima());
   const [plazoMeses, setPlazoMeses] = useState(12);
@@ -95,10 +98,28 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     verificarContratosEnEspera();
   }, [dniInicial]);
 
+  const handleTipoDocumentoChange = (nuevoTipo) => {
+    setTipoDocumento(nuevoTipo);
+    setDni('');
+    setNombreCliente('');
+    setError('');
+    setEsElegible(true);
+    setMotivoRechazo('');
+    if (nuevoTipo === 'RUC') {
+      if (!fechaNacimiento) {
+        setFechaNacimiento('2015-01-01');
+      }
+      setEdadCliente(null);
+    } else {
+      setFechaNacimiento(fechaNacInicial || '');
+      setEdadCliente(fechaNacInicial ? calcularEdad(fechaNacInicial) : null);
+    }
+  };
+
   const handleFechaNacimientoChange = (e) => {
     const val = e.target.value;
     setFechaNacimiento(val);
-    if (val) {
+    if (val && tipoDocumento === 'DNI') {
       const edad = calcularEdad(val);
       setEdadCliente(edad);
       if (edad < EDAD_MINIMA) {
@@ -113,25 +134,32 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     }
   };
 
-  const consultarReniec = async (dniConsultar) => {
-    const d = (dniConsultar || dni).trim();
-    if (!/^\d{8}$/.test(d)) {
-      setError('Ingrese un número de DNI válido de 8 dígitos.');
-      return;
+  const consultarDocumento = async (docConsultar) => {
+    const d = (docConsultar || dni).trim();
+    if (tipoDocumento === 'DNI') {
+      if (!/^\d{8}$/.test(d)) {
+        setError('Ingrese un número de DNI válido de 8 dígitos.');
+        return;
+      }
+    } else {
+      if (!/^\d{11}$/.test(d)) {
+        setError('Ingrese un número de RUC válido de 11 dígitos.');
+        return;
+      }
     }
     setError('');
     setEsElegible(true);
     setMotivoRechazo('');
     try {
       const data = await api.cliente.buscar(d);
-      setNombreCliente(data.nombreCompleto);
+      setNombreCliente(data.nombreCompleto || '');
       if (!data.elegible) {
         setEsElegible(false);
         setMotivoRechazo(data.motivoRechazo);
         setError(`Cliente no apto para préstamo: ${data.motivoRechazo}`);
       }
     } catch (err) {
-      setError(err.message || 'Error al consultar RENIEC');
+      setError(err.message || (tipoDocumento === 'DNI' ? 'Error al consultar RENIEC' : 'Error al consultar empresa'));
       setNombreCliente('');
       setEsElegible(false);
     }
@@ -179,24 +207,26 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     setError('');
     setExito('');
 
-    if (!nombreCliente) {
-      setError('Consulte el DNI para autocompletar el nombre verificado del cliente.');
+    if (!nombreCliente.trim()) {
+      setError(tipoDocumento === 'DNI' ? 'Consulte el DNI para autocompletar el nombre verificado del cliente.' : 'Ingrese o consulte la Razón Social de la empresa.');
       return;
     }
 
     if (!fechaNacimiento) {
-      setError('Ingrese la fecha de nacimiento del cliente.');
+      setError(tipoDocumento === 'DNI' ? 'Ingrese la fecha de nacimiento del cliente.' : 'Ingrese la fecha de constitución de la empresa.');
       return;
     }
 
-    const edad = calcularEdad(fechaNacimiento);
-    if (edad === null || edad < EDAD_MINIMA) {
-      setError(`El cliente debe ser mayor de edad (mínimo ${EDAD_MINIMA} años) para registrarse en el sistema.`);
-      return;
-    }
-    if (edad > EDAD_MAXIMA) {
-      setError(`La edad máxima permitida para otorgar un crédito es de ${EDAD_MAXIMA} años (el cliente tiene ${edad} años).`);
-      return;
+    if (tipoDocumento === 'DNI') {
+      const edad = calcularEdad(fechaNacimiento);
+      if (edad === null || edad < EDAD_MINIMA) {
+        setError(`El cliente debe ser mayor de edad (mínimo ${EDAD_MINIMA} años) para registrarse en el sistema.`);
+        return;
+      }
+      if (edad > EDAD_MAXIMA) {
+        setError(`La edad máxima permitida para otorgar un crédito es de ${EDAD_MAXIMA} años (el cliente tiene ${edad} años).`);
+        return;
+      }
     }
 
     if (!esElegible) {
@@ -402,61 +432,127 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
           <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 mb-6 shadow-2xs">
             <form onSubmit={handleGenerarContrato} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-                <div className="sm:col-span-5">
+                <div className="sm:col-span-3">
                   <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                    DNI del cliente
+                    Tipo de prestatario
+                  </label>
+                  <select
+                    value={tipoDocumento}
+                    onChange={(e) => handleTipoDocumentoChange(e.target.value)}
+                    className="w-full h-10 px-3 text-xs font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition cursor-pointer"
+                  >
+                    <option value="DNI">👤 DNI (Persona Natural)</option>
+                    <option value="RUC">🏢 RUC (Empresa)</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-4">
+                  <label className="block text-xs font-medium text-[#2A2220] mb-1">
+                    {tipoDocumento === 'DNI' ? 'DNI del cliente' : 'RUC de la empresa'}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      maxLength="8"
+                      maxLength={tipoDocumento === 'DNI' ? 8 : 11}
                       value={dni}
                       onChange={(e) => setDni(e.target.value)}
-                      placeholder="8 dígitos"
+                      placeholder={tipoDocumento === 'DNI' ? '8 dígitos' : '11 dígitos'}
                       required
                       className="flex-1 h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
                     />
                     <button
                       type="button"
-                      onClick={() => consultarReniec()}
-                      className="h-10 px-3.5 text-xs font-medium rounded-lg border border-[#E3D3C2] bg-white hover:bg-[#FBF6F0] text-[#2A2220] transition cursor-pointer"
+                      onClick={() => consultarDocumento()}
+                      className="h-10 px-3.5 text-xs font-medium rounded-lg border border-[#E3D3C2] bg-white hover:bg-[#FBF6F0] text-[#2A2220] transition cursor-pointer whitespace-nowrap"
                     >
-                      Consultar
+                      {tipoDocumento === 'DNI' ? 'RENIEC' : 'Consultar'}
                     </button>
                   </div>
                 </div>
 
-                <div className="sm:col-span-7">
+                <div className="sm:col-span-5">
                   <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                    Nombre verificado (RENIEC)
+                    {tipoDocumento === 'DNI' ? 'Nombre verificado (RENIEC)' : 'Razón Social de la empresa'}
                   </label>
                   <input
                     type="text"
                     value={nombreCliente}
-                    readOnly
-                    placeholder="Se autocompleta con RENIEC"
+                    onChange={tipoDocumento === 'RUC' ? (e) => setNombreCliente(e.target.value) : undefined}
+                    readOnly={tipoDocumento === 'DNI'}
+                    placeholder={tipoDocumento === 'DNI' ? 'Se autocompleta con RENIEC' : 'Ej. COMERCIAL LOS ANDES S.A.C.'}
                     required
-                    className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-[#FBF6F0] text-[#6E625B] cursor-not-allowed"
+                    className={`w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] ${
+                      tipoDocumento === 'DNI'
+                        ? 'bg-[#FBF6F0] text-[#6E625B] cursor-not-allowed'
+                        : 'bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]'
+                    }`}
                   />
                 </div>
+              </div>
+
+              {/* Accesos rápidos de prueba */}
+              <div className="flex items-center gap-1.5 flex-wrap text-xs pt-0.5">
+                <span className="text-[11px] font-semibold text-[#6E625B] uppercase mr-1">Casos rápidos:</span>
+                {tipoDocumento === 'DNI' ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('10000001'); consultarDocumento('10000001'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      10000001 (Pérez)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('27427864'); consultarDocumento('27427864'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      27427864 (Castillo)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('10000003'); consultarDocumento('10000003'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      10000003 (Núñez)
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('20987654321'); consultarDocumento('20987654321'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      20987654321 (Los Andes)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('20123456789'); consultarDocumento('20123456789'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      20123456789 (Del Norte)
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                 <div>
                   <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                    Fecha de nacimiento del cliente
+                    {tipoDocumento === 'DNI' ? 'Fecha de nacimiento del cliente' : 'Fecha de constitución de la empresa'}
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="date"
                       value={fechaNacimiento}
                       onChange={handleFechaNacimientoChange}
-                      min={fechaMinima80}
-                      max={fechaMaxima18}
+                      min={tipoDocumento === 'DNI' ? fechaMinima80 : undefined}
+                      max={tipoDocumento === 'DNI' ? fechaMaxima18 : obtenerHoyLima()}
                       required
                       className="flex-1 h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition"
                     />
-                    {edadCliente !== null && (
+                    {tipoDocumento === 'DNI' && edadCliente !== null && (
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold whitespace-nowrap ${
                           edadCliente >= EDAD_MINIMA && edadCliente <= EDAD_MAXIMA
@@ -469,7 +565,9 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                     )}
                   </div>
                   <span className="text-[11px] text-[#6E625B] mt-1 block">
-                    Rango obligatorio: 18 a 80 años cumplidos
+                    {tipoDocumento === 'DNI'
+                      ? 'Rango obligatorio: 18 a 80 años cumplidos'
+                      : 'Fecha de registro o inicio de actividades'}
                   </span>
                 </div>
 
@@ -547,7 +645,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                   </button>
                   <button
                     type="submit"
-                    disabled={procesando || !esElegible || (edadCliente !== null && (edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA))}
+                    disabled={procesando || !esElegible || (tipoDocumento === 'DNI' && (edadCliente === null || edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA))}
                     className="h-10 px-5 text-xs font-semibold rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer shadow-xs"
                   >
                     {procesando ? 'Generando contrato...' : 'Generar contrato'}

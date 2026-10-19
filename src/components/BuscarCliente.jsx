@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { api } from '../api';
 
 export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
+  const [tipoDocumento, setTipoDocumento] = useState('DNI');
   const [dni, setDni] = useState('');
   const [resultado, setResultado] = useState(null);
   const [prestamosCliente, setPrestamosCliente] = useState([]);
@@ -37,32 +38,55 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
     return d.toISOString().split('T')[0];
   };
 
+  const handleTipoDocumentoChange = (tipo) => {
+    setTipoDocumento(tipo);
+    setDni('');
+    setResultado(null);
+    setPrestamosCliente([]);
+    setError('');
+    if (tipo === 'RUC') {
+      setFechaNacimiento('2015-01-01');
+      setEdadCliente(null);
+    } else {
+      setFechaNacimiento('');
+      setEdadCliente(null);
+    }
+  };
+
   const handleFechaNacChange = (e) => {
     const val = e.target.value;
     setFechaNacimiento(val);
-    if (val) {
+    if (val && tipoDocumento === 'DNI') {
       setEdadCliente(calcularEdad(val));
     } else {
       setEdadCliente(null);
     }
   };
 
-  const consultarDni = async (dniConsultar) => {
-    const dniLimpio = (dniConsultar || dni).trim();
-    if (!/^\d{8}$/.test(dniLimpio)) {
-      setError('Ingrese un número de DNI válido de 8 dígitos.');
-      setResultado(null);
-      return;
+  const consultarDocumento = async (docConsultar) => {
+    const docLimpio = (docConsultar || dni).trim();
+    if (tipoDocumento === 'DNI') {
+      if (!/^\d{8}$/.test(docLimpio)) {
+        setError('Ingrese un número de DNI válido de 8 dígitos.');
+        setResultado(null);
+        return;
+      }
+    } else {
+      if (!/^\d{11}$/.test(docLimpio)) {
+        setError('Ingrese un número de RUC válido de 11 dígitos.');
+        setResultado(null);
+        return;
+      }
     }
 
     setError('');
     setCargando(true);
     setPrestamosCliente([]);
     try {
-      const data = await api.cliente.buscar(dniLimpio);
+      const data = await api.cliente.buscar(docLimpio);
       setResultado(data);
       try {
-        const prestamos = await api.prestamo.listarPorClienteDni(dniLimpio);
+        const prestamos = await api.prestamo.listarPorClienteDni(docLimpio);
         setPrestamosCliente(prestamos || []);
       } catch {
         setPrestamosCliente([]);
@@ -76,9 +100,9 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
     }
   };
 
-  const buscarDemo = (numDni) => {
-    setDni(numDni);
-    consultarDni(numDni);
+  const buscarDemo = (numDoc) => {
+    setDni(numDoc);
+    consultarDocumento(numDoc);
   };
 
   return (
@@ -87,7 +111,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
       <div className="mb-6">
         <h1 className="text-xl font-bold tracking-tight text-[#2A2220]">Consulta de cliente</h1>
         <p className="text-xs text-[#6E625B] mt-0.5">
-          Verificación de identidad y aptitud crediticia en el padrón nacional
+          Verificación de identidad y aptitud crediticia de Personas Naturales (RENIEC) y Empresas (SUNAT)
         </p>
       </div>
 
@@ -96,15 +120,26 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            consultarDni();
+            consultarDocumento();
           }}
           className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center"
         >
+          <div className="w-full sm:w-56">
+            <select
+              value={tipoDocumento}
+              onChange={(e) => handleTipoDocumentoChange(e.target.value)}
+              className="w-full h-10 px-3 text-xs font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition cursor-pointer"
+            >
+              <option value="DNI">👤 DNI (Persona Natural)</option>
+              <option value="RUC">🏢 RUC (Empresa)</option>
+            </select>
+          </div>
+
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Número de DNI (8 dígitos)"
-              maxLength="8"
+              placeholder={tipoDocumento === 'DNI' ? 'Número de DNI (8 dígitos)' : 'Número de RUC (11 dígitos)'}
+              maxLength={tipoDocumento === 'DNI' ? 8 : 11}
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               required
@@ -129,37 +164,56 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
         {/* Accesos de prueba */}
         <div className="mt-4 pt-3.5 border-t border-[#E3D3C2]/40">
           <span className="block text-[11px] font-medium text-[#6E625B] uppercase tracking-wider mb-2">
-            Casos de prueba
+            Casos de prueba {tipoDocumento === 'DNI' ? '(Personas Naturales)' : '(Empresas)'}
           </span>
           <div className="flex flex-wrap gap-1.5">
-            {[
-              { label: 'Pérez López (10000001)', dni: '10000001' },
-              { label: 'Castillo Terrones (27427864)', dni: '27427864' },
-              { label: 'Núñez Ávila (10000003)', dni: '10000003' },
-              { label: 'Fallecido (99999901)', dni: '99999901' },
-              { label: 'DNI Vencido (99999902)', dni: '99999902' },
-              { label: 'Extranjero (99999903)', dni: '99999903' },
-            ].map(({ label, dni }) => (
-              <button
-                key={dni}
-                type="button"
-                onClick={() => buscarDemo(dni)}
-                className="text-xs py-1 px-2.5 rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer"
-              >
-                {label}
-              </button>
-            ))}
+            {tipoDocumento === 'DNI' ? (
+              [
+                { label: 'Pérez López (10000001)', doc: '10000001' },
+                { label: 'Castillo Terrones (27427864)', doc: '27427864' },
+                { label: 'Núñez Ávila (10000003)', doc: '10000003' },
+                { label: 'Fallecido (99999901)', doc: '99999901' },
+                { label: 'DNI Vencido (99999902)', doc: '99999902' },
+                { label: 'Extranjero (99999903)', doc: '99999903' },
+              ].map(({ label, doc }) => (
+                <button
+                  key={doc}
+                  type="button"
+                  onClick={() => buscarDemo(doc)}
+                  className="text-xs py-1 px-2.5 rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer"
+                >
+                  {label}
+                </button>
+              ))
+            ) : (
+              [
+                { label: 'Comercial Los Andes S.A.C. (20987654321)', doc: '20987654321' },
+                { label: 'Préstamos del Norte S.A.C. (20123456789)', doc: '20123456789' },
+                { label: 'Distribuidora Norteña S.R.L. (20555666771)', doc: '20555666771' },
+              ].map(({ label, doc }) => (
+                <button
+                  key={doc}
+                  type="button"
+                  onClick={() => buscarDemo(doc)}
+                  className="text-xs py-1 px-2.5 rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer"
+                >
+                  {label}
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* Ficha de Resultado */}
-      {resultado && (
+      {resultado && (() => {
+        const esJuridica = (resultado.dni || '').length === 11;
+        return (
         <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 shadow-2xs">
           <div className="flex items-start justify-between pb-4 border-b border-[#E3D3C2]/40 mb-4 gap-4">
             <div>
               <span className="text-[11px] font-medium text-[#6E625B] uppercase tracking-wider block">
-                Resultado de identidad
+                {esJuridica ? 'Empresa / Razón Social' : 'Resultado de identidad'}
               </span>
               <h2 className="text-base font-semibold text-[#2A2220] mt-0.5">
                 {resultado.nombreCompleto}
@@ -168,7 +222,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             <div>
               {resultado.elegible ? (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  Apto para crédito
+                  {esJuridica ? 'Empresa apta para crédito' : 'Apto para crédito'}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
@@ -186,23 +240,23 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2 text-xs">
             <div>
-              <span className="text-[#6E625B] block text-[11px]">DNI</span>
+              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'RUC' : 'DNI'}</span>
               <span className="font-mono font-medium text-[#2A2220]">{resultado.dni}</span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">Nacionalidad</span>
-              <span className="font-medium text-[#2A2220]">{resultado.nacionalidad}</span>
+              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Tipo de entidad' : 'Nacionalidad'}</span>
+              <span className="font-medium text-[#2A2220]">{esJuridica ? 'Persona Jurídica' : resultado.nacionalidad}</span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">Vigencia DNI</span>
+              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Condición RUC' : 'Vigencia DNI'}</span>
               <span className={`font-medium ${resultado.dniVigente ? 'text-emerald-700' : 'text-red-700'}`}>
-                {resultado.dniVigente ? 'Vigente' : 'Vencido'}
+                {esJuridica ? (resultado.dniVigente ? 'Habido / Activo' : 'No habido') : (resultado.dniVigente ? 'Vigente' : 'Vencido')}
               </span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">Condición vital</span>
+              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Estado fiscal' : 'Condición vital'}</span>
               <span className={`font-medium ${!resultado.fallecido ? 'text-emerald-700' : 'text-red-700'}`}>
-                {!resultado.fallecido ? 'Vivo' : 'Fallecido'}
+                {esJuridica ? 'OPERATIVO' : (!resultado.fallecido ? 'Vivo' : 'Fallecido')}
               </span>
             </div>
           </div>
@@ -214,21 +268,21 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             </div>
           )}
 
-          {/* Verificación de mayoría de edad (mínimo 18 años) */}
+          {/* Verificación de fecha */}
           <div className="mt-4 pt-3.5 border-t border-[#E3D3C2]/40">
             <label className="block text-xs font-medium text-[#2A2220] mb-1">
-              Verificación de mayoría de edad (Fecha de nacimiento)
+              {esJuridica ? 'Fecha de constitución de la empresa' : 'Verificación de mayoría de edad (Fecha de nacimiento)'}
             </label>
             <div className="flex flex-col sm:flex-row gap-2.5 items-start sm:items-center">
               <input
                 type="date"
                 value={fechaNacimiento}
                 onChange={handleFechaNacChange}
-                min={obtenerFechaMinima80()}
-                max={obtenerFechaMaxima18()}
+                min={!esJuridica ? obtenerFechaMinima80() : undefined}
+                max={!esJuridica ? obtenerFechaMaxima18() : new Date().toISOString().split('T')[0]}
                 className="h-10 px-3 text-xs rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
               />
-              {edadCliente !== null && (
+              {!esJuridica && edadCliente !== null && (
                 <div>
                   {edadCliente >= EDAD_MINIMA && edadCliente <= EDAD_MAXIMA ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -246,6 +300,9 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                 </div>
               )}
             </div>
+            <span className="text-[11px] text-[#6E625B] mt-1 block">
+              {esJuridica ? 'Fecha de constitución o inscripción en Registros Públicos' : 'Rango obligatorio: 18 a 80 años cumplidos'}
+            </span>
           </div>
 
           {/* Préstamos registrados del cliente para cobro rápido */}
@@ -307,8 +364,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             <div className="mt-6 pt-4 border-t border-[#E3D3C2]/40 flex justify-end">
               <button
                 type="button"
-                disabled={edadCliente !== null && (edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA)}
-                onClick={() => onIniciarPrestamo(resultado.dni, resultado.nombreCompleto, fechaNacimiento)}
+                disabled={!esJuridica && edadCliente !== null && (edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA)}
+                onClick={() => onIniciarPrestamo(resultado.dni, resultado.nombreCompleto, esJuridica ? (fechaNacimiento || '2015-01-01') : fechaNacimiento)}
                 className="h-10 px-5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer"
               >
                 Continuar a registrar préstamo
@@ -316,7 +373,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
