@@ -187,6 +187,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               ))
             ) : (
               [
+                { label: 'Agrolight Perú S.A.C. (20552103816)', doc: '20552103816' },
+                { label: 'El Sol S.A.C. (20141878477)', doc: '20141878477' },
                 { label: 'Comercial Los Andes S.A.C. (20987654321)', doc: '20987654321' },
                 { label: 'Préstamos del Norte S.A.C. (20123456789)', doc: '20123456789' },
                 { label: 'Distribuidora Norteña S.R.L. (20555666771)', doc: '20555666771' },
@@ -218,6 +220,14 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               <h2 className="text-base font-semibold text-[#2A2220] mt-0.5">
                 {resultado.nombreCompleto}
               </h2>
+              {esJuridica && (
+                <div className="mt-1 text-xs text-[#2A2220]">
+                  <span className="text-[#6E625B]">Representante legal / Encargado:</span>{' '}
+                  <strong className="text-[#9C4A2B]">{resultado.representanteNombre || 'Representante Legal'}</strong>
+                  {resultado.representanteCargo && <span className="text-[#6E625B]"> • {resultado.representanteCargo}</span>}
+                  {resultado.representanteDocumento && <span className="font-mono text-[#6E625B]"> (DNI: {resultado.representanteDocumento})</span>}
+                </div>
+              )}
             </div>
             <div>
               {resultado.elegible ? (
@@ -383,7 +393,17 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               <button
                 type="button"
                 disabled={!esJuridica && edadCliente !== null && (edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA)}
-                onClick={() => onIniciarPrestamo(resultado.dni, resultado.nombreCompleto, esJuridica ? (fechaNacimiento || '2015-01-01') : fechaNacimiento)}
+                onClick={() => onIniciarPrestamo(
+                  resultado.dni,
+                  resultado.nombreCompleto,
+                  esJuridica ? (fechaNacimiento || '2015-01-01') : fechaNacimiento,
+                  esJuridica ? {
+                    representanteLegal: resultado.representanteNombre,
+                    dniRepresentante: resultado.representanteDocumento,
+                    cargoRepresentante: resultado.representanteCargo,
+                    direccionEmpresa: resultado.direccion,
+                  } : {}
+                )}
                 className="h-10 px-5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer"
               >
                 Continuar a registrar préstamo

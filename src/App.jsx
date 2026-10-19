@@ -74,8 +74,8 @@ export default function App() {
     }
   };
 
-  const handleIniciarPrestamo = (dni, nombre, fechaNac = '') => {
-    const datos = { dni, nombre, fechaNac };
+  const handleIniciarPrestamo = (dni, nombre, fechaNac = '', datosExtra = {}) => {
+    const datos = { dni, nombre, fechaNac, ...(datosExtra || {}) };
     sessionStorage.setItem('pagaopiu_datos_cliente', JSON.stringify(datos));
     setDatosCliente(datos);
     setVistaActual('registrar');
@@ -172,6 +172,10 @@ export default function App() {
                 dniInicial={datosCliente.dni}
                 nombreInicial={datosCliente.nombre}
                 fechaNacInicial={datosCliente.fechaNac}
+                representanteInicial={datosCliente.representanteLegal}
+                dniRepInicial={datosCliente.dniRepresentante}
+                cargoRepInicial={datosCliente.cargoRepresentante}
+                direccionInicial={datosCliente.direccionEmpresa}
                 onPrestamoRegistrado={(id) => {
                   setPrestamoSeleccionadoId(id);
                   setVistaActual('cobranza');

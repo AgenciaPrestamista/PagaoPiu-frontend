@@ -38,7 +38,17 @@ const obtenerFechaMinima80 = () => {
   return d.toISOString().split('T')[0];
 };
 
-export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacInicial, onPrestamoRegistrado, onCancelar }) {
+export default function RegistrarPrestamo({
+  dniInicial,
+  nombreInicial,
+  fechaNacInicial,
+  representanteInicial,
+  dniRepInicial,
+  cargoRepInicial,
+  direccionInicial,
+  onPrestamoRegistrado,
+  onCancelar,
+}) {
   const fechaMaxima18 = obtenerFechaMaxima18();
   const fechaMinima80 = obtenerFechaMinima80();
   const [tipoDocumento, setTipoDocumento] = useState(
@@ -49,10 +59,10 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
   const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || (dniInicial && dniInicial.length === 11 ? '2015-01-01' : ''));
   const [edadCliente, setEdadCliente] = useState(fechaNacInicial ? calcularEdad(fechaNacInicial) : null);
   const [fechaPrestamo] = useState(obtenerHoyLima());
-  const [direccionEmpresa, setDireccionEmpresa] = useState('');
-  const [representanteLegal, setRepresentanteLegal] = useState('');
-  const [dniRepresentante, setDniRepresentante] = useState('');
-  const [cargoRepresentante, setCargoRepresentante] = useState('GERENTE GENERAL');
+  const [direccionEmpresa, setDireccionEmpresa] = useState(direccionInicial || '');
+  const [representanteLegal, setRepresentanteLegal] = useState(representanteInicial || '');
+  const [dniRepresentante, setDniRepresentante] = useState(dniRepInicial || '');
+  const [cargoRepresentante, setCargoRepresentante] = useState(cargoRepInicial || 'GERENTE GENERAL');
   const [plazoMeses, setPlazoMeses] = useState(12);
   const [monto, setMonto] = useState(1000);
 
@@ -222,9 +232,20 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     setError('');
     setExito('');
 
-    if (!nombreCliente.trim()) {
-      setError(tipoDocumento === 'DNI' ? 'Consulte el DNI para autocompletar el nombre verificado del cliente.' : 'Ingrese o consulte la Razón Social de la empresa.');
-      return;
+    if (tipoDocumento === 'DNI') {
+      if (!nombreCliente.trim()) {
+        setError('Consulte el DNI para autocompletar el nombre verificado del cliente.');
+        return;
+      }
+    } else {
+      if (!representanteLegal.trim()) {
+        setError('Consulte el RUC o ingrese el Representante Legal (Encargado) de la empresa.');
+        return;
+      }
+      if (!nombreCliente.trim()) {
+        setError('Ingrese o consulte la Razón Social de la empresa.');
+        return;
+      }
     }
 
     if (!fechaNacimiento) {
@@ -259,7 +280,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     try {
       const nuevoContrato = await api.contratos.generar({
         dni: dni.trim(),
-        nombreCliente: nombreCliente.trim(),
+        nombreCliente: (nombreCliente || representanteLegal).trim(),
         fechaNacimiento,
         fechaPrestamo,
         plazoMeses: Number(plazoMeses),
@@ -497,19 +518,25 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
 
                 <div className="sm:col-span-5">
                   <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                    {tipoDocumento === 'DNI' ? 'Nombre verificado (RENIEC)' : 'Razón Social de la empresa'}
+                    {tipoDocumento === 'DNI' ? 'Nombre verificado (RENIEC)' : 'Representante legal / Encargado (SUNAT)'}
                   </label>
                   <input
                     type="text"
-                    value={nombreCliente}
-                    onChange={tipoDocumento === 'RUC' ? (e) => setNombreCliente(e.target.value) : undefined}
+                    value={tipoDocumento === 'DNI' ? nombreCliente : representanteLegal}
+                    onChange={(e) => {
+                      if (tipoDocumento === 'DNI') {
+                        setNombreCliente(e.target.value);
+                      } else {
+                        setRepresentanteLegal(e.target.value);
+                      }
+                    }}
                     readOnly={tipoDocumento === 'DNI'}
-                    placeholder={tipoDocumento === 'DNI' ? 'Se autocompleta con RENIEC' : 'Ej. COMERCIAL LOS ANDES S.A.C.'}
+                    placeholder={tipoDocumento === 'DNI' ? 'Se autocompleta con RENIEC' : 'Se autocompleta con SUNAT (Encargado)'}
                     required
                     className={`w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] ${
                       tipoDocumento === 'DNI'
                         ? 'bg-[#FBF6F0] text-[#6E625B] cursor-not-allowed'
-                        : 'bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]'
+                        : 'bg-white text-[#2A2220] font-medium focus:outline-none focus:border-[#9C4A2B]'
                     }`}
                   />
                 </div>
@@ -517,22 +544,29 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
 
               {/* Campos específicos de Persona Jurídica (Empresa) */}
               {tipoDocumento === 'RUC' && (
-                <div className="p-3.5 bg-[#FBF6F0] rounded-xl border border-[#E3D3C2] space-y-3">
-                  <div className="text-[11px] font-bold text-[#6E625B] uppercase tracking-wider">
-                    Datos del Representante Legal (Encargado) y Domicilio Fiscal SUNAT
+                <div className="p-4 bg-[#FBF6F0] rounded-xl border border-[#E3D3C2] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#6E625B] uppercase tracking-wider">
+                      Datos de la Empresa y Domicilio Fiscal SUNAT
+                    </span>
+                    {representanteLegal && (
+                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                        Representante verificado en SUNAT
+                      </span>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                     <div className="sm:col-span-6">
                       <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                        Representante legal / Encargado
+                        Razón Social de la empresa
                       </label>
                       <input
                         type="text"
-                        value={representanteLegal}
-                        onChange={(e) => setRepresentanteLegal(e.target.value)}
-                        placeholder="Nombre completo del representante legal"
+                        value={nombreCliente}
+                        onChange={(e) => setNombreCliente(e.target.value)}
+                        placeholder="Ej. AGROLIGHT PERU S.A.C."
                         required={tipoDocumento === 'RUC'}
-                        className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                        className="w-full h-10 px-3 text-sm font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                       />
                     </div>
                     <div className="sm:col-span-3">
