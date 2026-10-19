@@ -181,8 +181,9 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
   };
 
   const handleSimular = async () => {
-    if (!monto || monto < 1 || monto > 10000) {
-      setError('El monto a financiar debe estar entre S/ 1.00 y S/ 10,000.00.');
+    const montoNum = Number(monto);
+    if (!monto || isNaN(montoNum) || montoNum < 1 || montoNum > 10000) {
+      setError('El monto a financiar no puede ser mayor a S/ 10,000.00 (mínimo S/ 1.00).');
       return;
     }
     if (!plazoMeses || plazoMeses < 1 || plazoMeses > 60) {
@@ -231,6 +232,12 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
 
     if (!esElegible) {
       setError(`No es posible registrar el préstamo: ${motivoRechazo || 'El cliente no califica según las políticas crediticias.'}`);
+      return;
+    }
+
+    const montoNum = Number(monto);
+    if (!monto || isNaN(montoNum) || montoNum < 1 || montoNum > 10000) {
+      setError('El monto solicitado no puede ser mayor a S/ 10,000.00 (mínimo S/ 1.00).');
       return;
     }
 
@@ -620,7 +627,32 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                       min="1"
                       max="10000"
                       value={monto}
-                      onChange={(e) => setMonto(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setMonto('');
+                          return;
+                        }
+                        const num = parseFloat(val);
+                        if (!isNaN(num) && num > 10000) {
+                          setMonto('10000');
+                          setError('El monto máximo permitido es S/ 10,000.00. No se permite ingresar más.');
+                        } else {
+                          setMonto(val);
+                          if (error && error.includes('10,000')) setError('');
+                        }
+                      }}
+                      onBlur={() => {
+                        const num = parseFloat(monto);
+                        if (!isNaN(num) && num > 10000) {
+                          setMonto('10000');
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (['e', 'E', '+', '-'].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       required
                       className="w-full h-10 pl-8 pr-3 text-sm font-mono font-medium rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition"
                     />
