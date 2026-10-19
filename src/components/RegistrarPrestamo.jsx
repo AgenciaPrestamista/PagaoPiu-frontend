@@ -49,6 +49,10 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
   const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || (dniInicial && dniInicial.length === 11 ? '2015-01-01' : ''));
   const [edadCliente, setEdadCliente] = useState(fechaNacInicial ? calcularEdad(fechaNacInicial) : null);
   const [fechaPrestamo] = useState(obtenerHoyLima());
+  const [direccionEmpresa, setDireccionEmpresa] = useState('');
+  const [representanteLegal, setRepresentanteLegal] = useState('');
+  const [dniRepresentante, setDniRepresentante] = useState('');
+  const [cargoRepresentante, setCargoRepresentante] = useState('GERENTE GENERAL');
   const [plazoMeses, setPlazoMeses] = useState(12);
   const [monto, setMonto] = useState(1000);
 
@@ -102,6 +106,10 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     setTipoDocumento(nuevoTipo);
     setDni('');
     setNombreCliente('');
+    setDireccionEmpresa('');
+    setRepresentanteLegal('');
+    setDniRepresentante('');
+    setCargoRepresentante('GERENTE GENERAL');
     setError('');
     setEsElegible(true);
     setMotivoRechazo('');
@@ -152,7 +160,13 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
     setMotivoRechazo('');
     try {
       const data = await api.cliente.buscar(d);
-      setNombreCliente(data.nombreCompleto || '');
+      setNombreCliente(data.nombreCompleto || data.razonSocial || '');
+      if (tipoDocumento === 'RUC') {
+        if (data.direccion) setDireccionEmpresa(data.direccion);
+        if (data.representanteNombre) setRepresentanteLegal(data.representanteNombre);
+        if (data.representanteDocumento) setDniRepresentante(data.representanteDocumento);
+        if (data.representanteCargo) setCargoRepresentante(data.representanteCargo);
+      }
       if (!data.elegible) {
         setEsElegible(false);
         setMotivoRechazo(data.motivoRechazo);
@@ -344,15 +358,15 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
       {contratoVencidoMsg && (
         <div className="mb-5 p-4 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start justify-between gap-3 no-print">
           <div>
-            <span className="font-bold block mb-0.5">⚠️ Contrato en espera caducado</span>
+            <span className="font-bold block mb-0.5">Aviso: Contrato en espera caducado</span>
             <p>{contratoVencidoMsg}</p>
           </div>
           <button
             type="button"
             onClick={() => setContratoVencidoMsg('')}
-            className="text-amber-700 font-bold hover:text-amber-900 cursor-pointer"
+            className="text-amber-700 font-semibold hover:text-amber-900 cursor-pointer text-xs"
           >
-            ✕
+            Cerrar
           </button>
         </div>
       )}
@@ -361,7 +375,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
       {contratoPendienteDetectado && paso === 1 && (
         <div className="mb-5 p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 no-print">
           <div>
-            <span className="font-bold block text-sm">📄 Contrato en espera detectado</span>
+            <span className="font-bold block text-sm">Contrato en espera detectado</span>
             <p className="mt-0.5 text-blue-700">
               Existe el contrato <strong>{contratoPendienteDetectado.numeroContrato}</strong> para {contratoPendienteDetectado.clienteNombre} (S/ {Number(contratoPendienteDetectado.monto).toFixed(2)}).
               {contratoPendienteDetectado.impreso ? ' Ya fue impreso; listo para subir firmado.' : ' Listo para revisar e imprimir.'}
@@ -452,8 +466,8 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                     onChange={(e) => handleTipoDocumentoChange(e.target.value)}
                     className="w-full h-10 px-3 text-xs font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition cursor-pointer"
                   >
-                    <option value="DNI">👤 DNI (Persona Natural)</option>
-                    <option value="RUC">🏢 RUC (Empresa)</option>
+                    <option value="DNI">DNI (Persona Natural)</option>
+                    <option value="RUC">RUC (Empresa)</option>
                   </select>
                 </div>
 
@@ -501,6 +515,68 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                 </div>
               </div>
 
+              {/* Campos específicos de Persona Jurídica (Empresa) */}
+              {tipoDocumento === 'RUC' && (
+                <div className="p-3.5 bg-[#FBF6F0] rounded-xl border border-[#E3D3C2] space-y-3">
+                  <div className="text-[11px] font-bold text-[#6E625B] uppercase tracking-wider">
+                    Datos del Representante Legal (Encargado) y Domicilio Fiscal SUNAT
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                    <div className="sm:col-span-6">
+                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
+                        Representante legal / Encargado
+                      </label>
+                      <input
+                        type="text"
+                        value={representanteLegal}
+                        onChange={(e) => setRepresentanteLegal(e.target.value)}
+                        placeholder="Nombre completo del representante legal"
+                        required={tipoDocumento === 'RUC'}
+                        className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
+                        DNI del representante
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={8}
+                        value={dniRepresentante}
+                        onChange={(e) => setDniRepresentante(e.target.value)}
+                        placeholder="DNI (8 dígitos)"
+                        className="w-full h-10 px-3 text-sm font-mono rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
+                        Cargo
+                      </label>
+                      <input
+                        type="text"
+                        value={cargoRepresentante}
+                        onChange={(e) => setCargoRepresentante(e.target.value)}
+                        placeholder="Gerente General"
+                        className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                      />
+                    </div>
+                    <div className="sm:col-span-12">
+                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
+                        Domicilio fiscal registrado en SUNAT
+                      </label>
+                      <input
+                        type="text"
+                        value={direccionEmpresa}
+                        onChange={(e) => setDireccionEmpresa(e.target.value)}
+                        placeholder="Dirección fiscal completa de la empresa"
+                        required={tipoDocumento === 'RUC'}
+                        className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Accesos rápidos de prueba */}
               <div className="flex items-center gap-1.5 flex-wrap text-xs pt-0.5">
                 <span className="text-[11px] font-semibold text-[#6E625B] uppercase mr-1">Casos rápidos:</span>
@@ -544,6 +620,20 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                     >
                       20123456789 (Del Norte)
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('20552103816'); consultarDocumento('20552103816'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      20552103816 (Agrolight)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDni('20141878477'); consultarDocumento('20141878477'); }}
+                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
+                    >
+                      20141878477 (El Sol)
+                    </button>
                   </>
                 )}
               </div>
@@ -571,7 +661,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                             : 'bg-red-50 text-red-700 border border-red-200'
                         }`}
                       >
-                        {edadCliente} años {edadCliente >= EDAD_MINIMA && edadCliente <= EDAD_MAXIMA ? '✓' : '(No apto)'}
+                        {edadCliente} años {edadCliente >= EDAD_MINIMA && edadCliente <= EDAD_MAXIMA ? '(Apto)' : '(No apto)'}
                       </span>
                     )}
                   </div>
@@ -763,7 +853,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                 disabled={procesando}
                 className="h-10 px-5 text-xs font-bold rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer shadow-xs flex items-center gap-2"
               >
-                <span>🖨️ Imprimir contrato</span>
+                <span>Imprimir contrato</span>
               </button>
             </div>
           </div>
@@ -829,7 +919,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                     <div className={`p-3 rounded-lg border ${!esJuridica ? 'border-[#9C4A2B] bg-[#FFF4E6]/30' : 'border-gray-200 bg-gray-50/50 opacity-60'}`}>
-                      <div className="font-bold text-[11px] uppercase mb-1">A. Si el prestatario es una persona natural {!esJuridica && '✓ (Aplica)'}</div>
+                      <div className="font-bold text-[11px] uppercase mb-1">A. Si el prestatario es una persona natural {!esJuridica && '(Aplica)'}</div>
                       <ul className="list-disc list-inside space-y-0.5 ml-1">
                         <li><strong>Nombres y apellidos:</strong> {!esJuridica ? contrato.clienteNombre : '-'}</li>
                         <li><strong>DNI o doc. identidad:</strong> {!esJuridica ? contrato.clienteDni : '-'}</li>
@@ -841,14 +931,14 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                     </div>
 
                     <div className={`p-3 rounded-lg border ${esJuridica ? 'border-[#9C4A2B] bg-[#FFF4E6]/30' : 'border-gray-200 bg-gray-50/50 opacity-60'}`}>
-                      <div className="font-bold text-[11px] uppercase mb-1">B. Si el prestatario es una persona jurídica {esJuridica && '✓ (Aplica)'}</div>
+                      <div className="font-bold text-[11px] uppercase mb-1">B. Si el prestatario es una persona jurídica {esJuridica && '(Aplica)'}</div>
                       <ul className="list-disc list-inside space-y-0.5 ml-1">
                         <li><strong>Razón social:</strong> {esJuridica ? contrato.clienteNombre : '-'}</li>
                         <li><strong>RUC:</strong> {esJuridica ? contrato.clienteDni : '-'}</li>
-                        <li><strong>Domicilio fiscal:</strong> Dirección fiscal registrada en SUNAT</li>
-                        <li><strong>Representante legal:</strong> {esJuridica ? contrato.clienteNombre : '-'}</li>
-                        <li><strong>DNI del representante:</strong> -</li>
-                        <li><strong>Cargo del representante:</strong> Gerente General</li>
+                        <li><strong>Domicilio fiscal:</strong> {esJuridica ? (direccionEmpresa || 'Dirección fiscal registrada en SUNAT') : '-'}</li>
+                        <li><strong>Representante legal / Encargado:</strong> {esJuridica ? (representanteLegal || 'Representante Legal debidamente facultado') : '-'}</li>
+                        <li><strong>DNI del representante:</strong> {esJuridica ? (dniRepresentante || '-') : '-'}</li>
+                        <li><strong>Cargo del representante:</strong> {esJuridica ? (cargoRepresentante || 'Gerente General') : '-'}</li>
                         <li><strong>Inscripción registral:</strong> Partida Electrónica N.° 11029384</li>
                       </ul>
                     </div>
@@ -1117,9 +1207,31 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                       <div className="font-bold uppercase text-[11px] text-gray-500 mb-12">EL PRESTATARIO</div>
                       <div className="border-t border-gray-800 mx-4 pt-2">
                         <div className="font-bold text-sm">Firma: ________________________</div>
-                        <div className="mt-2 text-gray-700 font-medium">Nombre / Razón social: {contrato.clienteNombre}</div>
-                        <div className="text-gray-600 font-mono">{esJuridica ? 'RUC' : 'DNI'}: {contrato.clienteDni}</div>
-                        <div className="text-gray-600">Representante: {esJuridica ? contrato.clienteNombre : 'Titular'}</div>
+                        <div className="mt-2 text-gray-700 font-medium">
+                          {esJuridica ? 'Razón Social: ' : 'Nombre: '}
+                          {contrato.clienteNombre}
+                        </div>
+                        <div className="text-gray-600 font-mono">
+                          {esJuridica ? 'RUC: ' : 'DNI: '}
+                          {contrato.clienteDni}
+                        </div>
+                        {esJuridica ? (
+                          <>
+                            <div className="text-gray-800 font-semibold mt-1">
+                              Representante: {representanteLegal || 'Representante Legal'}
+                            </div>
+                            {dniRepresentante && (
+                              <div className="text-gray-600 font-mono">
+                                DNI Rep.: {dniRepresentante}
+                              </div>
+                            )}
+                            <div className="text-gray-600 text-[11px]">
+                              Cargo: {cargoRepresentante || 'Gerente General'}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-gray-600">Calidad: Titular</div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1191,7 +1303,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                   {contrato.numeroContrato}
                 </h2>
                 <div className="text-xs text-[#6E625B]">
-                  Cliente: <strong>{contrato.clienteNombre}</strong> (DNI {contrato.clienteDni}) • S/ {Number(contrato.capital).toFixed(2)}
+                  Cliente: <strong>{contrato.clienteNombre}</strong> ({esJuridica ? 'RUC' : 'DNI'} {contrato.clienteDni}) • S/ {Number(contrato.capital).toFixed(2)}
                 </div>
               </div>
 
@@ -1203,7 +1315,7 @@ export default function RegistrarPrestamo({ dniInicial, nombreInicial, fechaNacI
                   }}
                   className="h-9 px-3.5 text-xs font-medium rounded-lg border border-[#E3D3C2] bg-white hover:bg-[#FBF6F0] text-[#2A2220] transition cursor-pointer"
                 >
-                  🖨️ Reimprimir contrato
+                  Reimprimir contrato
                 </button>
                 <button
                   type="button"

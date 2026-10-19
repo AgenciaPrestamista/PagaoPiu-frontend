@@ -161,7 +161,7 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
               disabled={descargandoContrato}
               className="h-9 px-3.5 text-xs font-medium rounded-lg border border-[#9C4A2B] text-[#9C4A2B] hover:bg-[#FFF4E6] transition cursor-pointer"
             >
-              {descargandoContrato ? 'Descargando...' : '📄 Ver contrato firmado'}
+              {descargandoContrato ? 'Descargando...' : 'Ver contrato firmado'}
             </button>
           )}
         </div>
@@ -260,11 +260,11 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
 
         {prestamo.estado === 'EN_ESPERA' ? (
           <div className="p-3.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-            ⚠️ Este crédito se encuentra <strong>EN ESPERA</strong> de formalización. No admite pagos ni cobranza en ventanilla.
+            Este crédito se encuentra <strong>EN ESPERA</strong> de formalización. No admite pagos ni cobranza en ventanilla.
           </div>
         ) : prestamo.estado === 'ANULADO' ? (
           <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
-            ⚠️ Este crédito se encuentra <strong>ANULADO</strong>. No registra saldos ni admite operaciones.
+            Este crédito se encuentra <strong>ANULADO</strong>. No registra saldos ni admite operaciones.
           </div>
         ) : esCancelado ? (
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-600">
@@ -272,7 +272,7 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
           </div>
         ) : prestamo.estado === 'EXTRAJUDICIAL' ? (
           <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
-            <span className="font-bold">⚠️ CRÉDITO EN COBRANZA EXTRAJUDICIAL (Atraso ≥ 365 días):</span> Conforme a las reglas R10 y R13, este préstamo no admite pagos ordinarios en ventanilla y se encuentra en cobranza jurídica.
+            <span className="font-bold">CRÉDITO EN COBRANZA EXTRAJUDICIAL (Atraso ≥ 365 días):</span> Conforme a las reglas R10 y R13, este préstamo no admite pagos ordinarios en ventanilla y se encuentra en cobranza jurídica.
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -434,7 +434,7 @@ export default function DetallePrestamo({ prestamoId, onVolver, onNuevoPrestamo 
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-[#FFF4E6] text-[#9C4A2B] border border-[#E3D3C2] hover:bg-[#F1E4D6] transition cursor-pointer"
                         title="Ver / Reimprimir comprobante"
                       >
-                        <span>🖨️ {(pagos || []).find((p) => p.id === c.pagoId)?.numeroComprobante || `#${c.pagoId}`}</span>
+                        <span>{(pagos || []).find((p) => p.id === c.pagoId)?.numeroComprobante || `#${c.pagoId}`}</span>
                       </button>
                     ) : (
                       <span className="text-[#6E625B]">—</span>

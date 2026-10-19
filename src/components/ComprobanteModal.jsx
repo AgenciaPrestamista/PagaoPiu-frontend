@@ -29,7 +29,6 @@ export default function ComprobanteModal({ pago, onCerrar }) {
         {/* Barra de control superior (no se imprime) */}
         <div className="flex items-center justify-between px-6 py-3 bg-[#F1E4D6] border-b border-[#E3D3C2] no-print">
           <div className="flex items-center gap-2">
-            <span className="text-base">🧾</span>
             <span className="text-xs font-bold text-[#2A2220] uppercase tracking-wider">
               Comprobante de Pago Electrónico
             </span>
@@ -40,14 +39,14 @@ export default function ComprobanteModal({ pago, onCerrar }) {
               onClick={handleImprimir}
               className="h-8 px-4 text-xs font-bold rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
-              <span>🖨️ Imprimir</span>
+              <span>Imprimir</span>
             </button>
             <button
               type="button"
               onClick={onCerrar}
               className="h-8 px-3 text-xs font-semibold rounded-lg bg-white border border-[#E3D3C2] text-[#6E625B] hover:bg-gray-100 transition cursor-pointer"
             >
-              ✕ Cerrar
+              Cerrar
             </button>
           </div>
         </div>

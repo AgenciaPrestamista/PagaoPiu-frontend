@@ -130,8 +130,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               onChange={(e) => handleTipoDocumentoChange(e.target.value)}
               className="w-full h-10 px-3 text-xs font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition cursor-pointer"
             >
-              <option value="DNI">👤 DNI (Persona Natural)</option>
-              <option value="RUC">🏢 RUC (Empresa)</option>
+              <option value="DNI">DNI (Persona Natural)</option>
+              <option value="RUC">RUC (Empresa)</option>
             </select>
           </div>
 
@@ -261,6 +261,24 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             </div>
           </div>
 
+          {esJuridica && (
+            <div className="mt-3 pt-3 border-t border-[#E3D3C2]/40 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-[#6E625B] block text-[11px]">Representante legal / Encargado:</span>
+                <span className="font-semibold text-[#2A2220]">
+                  {resultado.representanteNombre || 'Representante Legal debidamente facultado'}
+                </span>
+                <span className="text-[#6E625B] block text-[11px]">
+                  {resultado.representanteCargo || 'GERENTE GENERAL'} {resultado.representanteDocumento ? `(DNI: ${resultado.representanteDocumento})` : ''}
+                </span>
+              </div>
+              <div>
+                <span className="text-[#6E625B] block text-[11px]">Domicilio fiscal SUNAT:</span>
+                <span className="font-medium text-[#2A2220]">{resultado.direccion || 'Dirección fiscal registrada en SUNAT'}</span>
+              </div>
+            </div>
+          )}
+
           {resultado.clienteEstado && (
             <div className="mt-3 pt-3 border-t border-[#E3D3C2]/40 flex items-center gap-2 text-xs">
               <span className="text-[#6E625B]">Estado en la entidad:</span>
@@ -286,15 +304,15 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                 <div>
                   {edadCliente >= EDAD_MINIMA && edadCliente <= EDAD_MAXIMA ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      ✓ Mayor de edad ({edadCliente} años)
+                      Mayor de edad ({edadCliente} años)
                     </span>
                   ) : edadCliente < EDAD_MINIMA ? (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                      ✕ Menor de edad ({edadCliente} años) — Requiere mínimo 18 años
+                      Menor de edad ({edadCliente} años) — Requiere mínimo 18 años
                     </span>
                   ) : (
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                      ✕ Excede edad máxima ({edadCliente} años) — Máximo 80 años
+                      Excede edad máxima ({edadCliente} años) — Máximo 80 años
                     </span>
                   )}
                 </div>

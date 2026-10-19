@@ -171,7 +171,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
     try {
       const pago = await api.pago.pagarCuota(prestamoSeleccionado.id);
       setMensajeExito(
-        `✓ Comprobante ${pago.numeroComprobante || '#' + pago.id} emitido con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} en Agencia ${pago.sucursalNombre} por el asesor ${pago.asesorNombre}.`
+        `Comprobante ${pago.numeroComprobante || '#' + pago.id} emitido con éxito. Monto cobrado: S/ ${Number(pago.monto).toFixed(2)} en Agencia ${pago.sucursalNombre} por el asesor ${pago.asesorNombre}.`
       );
 
       // Mostrar modal de comprobante inmediatamente
@@ -221,7 +221,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
     try {
       const pago = await api.pago.cancelarAnticipado(prestamoSeleccionado.id);
       setMensajeExito(
-        `✓ Cancelación anticipada procesada con éxito. Comprobante ${pago.numeroComprobante || '#' + pago.id}. Monto total liquidado: S/ ${Number(pago.monto).toFixed(2)}.`
+        `Cancelación anticipada procesada con éxito. Comprobante ${pago.numeroComprobante || '#' + pago.id}. Monto total liquidado: S/ ${Number(pago.monto).toFixed(2)}.`
       );
 
       // Mostrar modal de comprobante
@@ -370,7 +370,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
 
         {alertaReactivacion && (
           <div className="mt-3.5 p-3.5 rounded-lg bg-emerald-100 border border-emerald-300 text-xs text-emerald-900 font-medium animate-pulse">
-            ✓ ¡DEUDA REGULARIZADA! Al saldar las cuotas morosas, el crédito y el cliente han revertido automáticamente a estado <strong>ACTIVO / VIGENTE</strong>.
+            DEUDA REGULARIZADA: Al saldar las cuotas morosas, el crédito y el cliente han revertido automáticamente a estado <strong>ACTIVO / VIGENTE</strong>.
           </div>
         )}
       </div>
@@ -508,25 +508,25 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
 
             {prestamoSeleccionado.estado === 'EN_ESPERA' ? (
               <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                <div className="font-bold mb-1">⚠️ PRÉSTAMO EN ESPERA DE CONTRATO FIRMADO</div>
+                <div className="font-bold mb-1">PRÉSTAMO EN ESPERA DE CONTRATO FIRMADO</div>
                 <p>
                   Este crédito se encuentra en estado <strong>EN_ESPERA</strong> ({prestamoSeleccionado.numeroContrato || 'sin contrato'}). No admite pagos en ventanilla hasta ser formalizado con la subida del contrato firmado.
                 </p>
               </div>
             ) : prestamoSeleccionado.estado === 'ANULADO' ? (
               <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
-                <div className="font-bold mb-1">⚠️ PRÉSTAMO ANULADO</div>
+                <div className="font-bold mb-1">PRÉSTAMO ANULADO</div>
                 <p>
                   Este préstamo fue <strong>ANULADO</strong>{prestamoSeleccionado.motivoAnulacion ? `: ${prestamoSeleccionado.motivoAnulacion}` : ''}. No registra saldos pendientes ni admite operaciones de cobranza.
                 </p>
               </div>
             ) : esCancelado ? (
               <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-700">
-                ✓ Este crédito se encuentra totalmente <strong>CANCELADO</strong>. No registra saldos pendientes de cobro.
+                Este crédito se encuentra totalmente <strong>CANCELADO</strong>. No registra saldos pendientes de cobro.
               </div>
             ) : esExtrajudicial ? (
               <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">
-                <div className="font-bold mb-1">⚠️ CRÉDITO EN COBRANZA EXTRAJUDICIAL (Atraso ≥ 365 días)</div>
+                <div className="font-bold mb-1">CRÉDITO EN COBRANZA EXTRAJUDICIAL (Atraso ≥ 365 días)</div>
                 <p>
                   Conforme a las reglas R10 y R13, este préstamo se encuentra derivado a cobranza legal y <strong>NO ADMITE pagos ordinarios en ventanilla</strong>. Requiere gestión por el área de cobranza jurídica especializada.
                 </p>
@@ -564,7 +564,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                 <div className="text-xs text-[#6E625B] sm:ml-auto">
                   {esMoroso && (
                     <span className="text-amber-700 font-semibold">
-                      ⚠️ Préstamo con cuota vencida. Cobrar la cuota regularizará la mora.
+                      Préstamo con cuota vencida. Cobrar la cuota regularizará la mora.
                     </span>
                   )}
                 </div>
@@ -702,7 +702,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                             })}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer shadow-2xs"
                           >
-                            <span>🖨️ Ver</span>
+                            <span>Ver</span>
                           </button>
                         </td>
                       </tr>
