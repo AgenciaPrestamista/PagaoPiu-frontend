@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 import ComprobanteModal from './ComprobanteModal';
 
-export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalleCompleto }) {
+export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalleCompleto, onRetomarContrato }) {
   const [criterioBusqueda, setCriterioBusqueda] = useState('');
   const [tipoBusqueda, setTipoBusqueda] = useState('dni'); // 'dni' o 'id'
   const [prestamosEncontrados, setPrestamosEncontrados] = useState([]);
@@ -507,11 +507,22 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
             </div>
 
             {prestamoSeleccionado.estado === 'EN_ESPERA' ? (
-              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                <div className="font-bold mb-1">PRÉSTAMO EN ESPERA DE CONTRATO FIRMADO</div>
-                <p>
-                  Este crédito se encuentra en estado <strong>EN_ESPERA</strong> ({prestamoSeleccionado.numeroContrato || 'sin contrato'}). No admite pagos en ventanilla hasta ser formalizado con la subida del contrato firmado.
-                </p>
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <div className="font-bold mb-1">PRÉSTAMO EN ESPERA DE CONTRATO FIRMADO</div>
+                  <p>
+                    Este crédito se encuentra en estado <strong>EN_ESPERA</strong> ({prestamoSeleccionado.numeroContrato || 'sin contrato'}). No admite pagos en ventanilla hasta ser formalizado con la subida del contrato firmado.
+                  </p>
+                </div>
+                {onRetomarContrato && (
+                  <button
+                    type="button"
+                    onClick={() => onRetomarContrato(prestamoSeleccionado)}
+                    className="h-9 px-4 text-xs font-semibold rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition whitespace-nowrap cursor-pointer shrink-0"
+                  >
+                    Retomar contrato
+                  </button>
+                )}
               </div>
             ) : prestamoSeleccionado.estado === 'ANULADO' ? (
               <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-xs text-red-800">

@@ -372,14 +372,30 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                       }`}>
                         {p.estado}
                       </span>
-                      {onVerPrestamo && (
+                      {p.estado === 'EN_ESPERA' ? (
                         <button
                           type="button"
-                          onClick={() => onVerPrestamo(p.id)}
-                          className="h-8 px-3 text-xs font-medium rounded-md bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer"
+                          onClick={() => {
+                            if (onIniciarPrestamo) {
+                              onIniciarPrestamo(p.clienteDni || resultado.dni, p.clienteNombre || resultado.nombreCompleto);
+                            } else if (onVerPrestamo) {
+                              onVerPrestamo(p.id);
+                            }
+                          }}
+                          className="h-8 px-3 text-xs font-semibold rounded-md bg-blue-700 text-white hover:bg-blue-800 transition cursor-pointer"
                         >
-                          {p.estado === 'EN_ESPERA' ? 'Ver contrato' : 'Cobrar cuota / Ver'}
+                          Retomar contrato
                         </button>
+                      ) : (
+                        onVerPrestamo && (
+                          <button
+                            type="button"
+                            onClick={() => onVerPrestamo(p.id)}
+                            className="h-8 px-3 text-xs font-medium rounded-md bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer"
+                          >
+                            Cobrar cuota / Ver
+                          </button>
+                        )
                       )}
                     </div>
                   </div>

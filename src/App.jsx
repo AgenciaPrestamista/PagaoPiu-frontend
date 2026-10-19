@@ -86,6 +86,17 @@ export default function App() {
     setVistaActual('cobranza');
   };
 
+  const handleRetomarContrato = (p) => {
+    const datos = {
+      dni: p.clienteDni || '',
+      nombre: p.clienteNombre || '',
+      fechaNac: '',
+    };
+    sessionStorage.setItem('pagaopiu_datos_cliente', JSON.stringify(datos));
+    setDatosCliente(datos);
+    setVistaActual('registrar');
+  };
+
   const handleCambiarPassword = async (e) => {
     e.preventDefault();
     setErrorPassword(null);
@@ -192,6 +203,7 @@ export default function App() {
                   setPrestamoSeleccionadoId(id);
                   setVistaActual('detalle');
                 }}
+                onRetomarContrato={handleRetomarContrato}
               />
             )}
 

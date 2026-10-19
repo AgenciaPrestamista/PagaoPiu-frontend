@@ -66,6 +66,9 @@ export default function RegistrarPrestamo({
   const [plazoMeses, setPlazoMeses] = useState(12);
   const [monto, setMonto] = useState(1000);
 
+  // Determinar si es persona jurídica de forma global y segura para todos los pasos y modales
+  const esJuridica = (contrato?.clienteDni || dni || '').length === 11 || tipoDocumento === 'RUC';
+
   const [simulacion, setSimulacion] = useState(null);
   const [cargandoSimulacion, setCargandoSimulacion] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -196,6 +199,28 @@ export default function RegistrarPrestamo({
       const detalle = await api.contratos.obtener(c.id);
       setContrato(detalle);
       setContratoPendienteDetectado(null);
+
+      // Sincronizar documento, tipo y datos fiscales del prestatario
+      if (detalle.clienteDni) {
+        setDni(detalle.clienteDni);
+        if (detalle.clienteDni.length === 11) {
+          setTipoDocumento('RUC');
+          setNombreCliente(detalle.clienteNombre || '');
+          try {
+            const cliData = await api.cliente.buscar(detalle.clienteDni);
+            if (cliData.representanteNombre) setRepresentanteLegal(cliData.representanteNombre);
+            if (cliData.representanteDocumento) setDniRepresentante(cliData.representanteDocumento);
+            if (cliData.representanteCargo) setCargoRepresentante(cliData.representanteCargo);
+            if (cliData.direccion) setDireccionEmpresa(cliData.direccion);
+          } catch {
+            // Silencioso si la búsqueda adicional falla
+          }
+        } else {
+          setTipoDocumento('DNI');
+          setNombreCliente(detalle.clienteNombre || '');
+        }
+      }
+
       setPaso(detalle.impreso ? 3 : 2);
     } catch (err) {
       setError(err.message || 'No fue posible retomar el contrato en espera');
@@ -398,7 +423,7 @@ export default function RegistrarPrestamo({
           <div>
             <span className="font-bold block text-sm">Contrato en espera detectado</span>
             <p className="mt-0.5 text-blue-700">
-              Existe el contrato <strong>{contratoPendienteDetectado.numeroContrato}</strong> para {contratoPendienteDetectado.clienteNombre} (S/ {Number(contratoPendienteDetectado.monto).toFixed(2)}).
+              Existe el contrato <strong>{contratoPendienteDetectado.numeroContrato}</strong> para {contratoPendienteDetectado.clienteNombre} (S/ {Number(contratoPendienteDetectado.capital || contratoPendienteDetectado.monto || 0).toFixed(2)}).
               {contratoPendienteDetectado.impreso ? ' Ya fue impreso; listo para subir firmado.' : ' Listo para revisar e imprimir.'}
             </p>
           </div>
