@@ -20,10 +20,36 @@ export default function Navbar({ usuario, onLogout, vistaActual, setVistaActual,
       {/* Navegación según Rol */}
       <nav className="flex-1 p-3.5 space-y-1.5">
         {usuario.rol === 'GERENTE' && (
-          <div className="px-3.5 py-2.5 rounded-lg text-xs font-semibold bg-[#823B20] text-white flex items-center justify-between">
-            <span>Panel gerencial</span>
-            <span className="w-2 h-2 rounded-full bg-[#E0B25A]"></span>
-          </div>
+          <>
+            <button
+              type="button"
+              onClick={() => setVistaActual('panel')}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-between ${
+                vistaActual === 'panel' || (!vistaActual || vistaActual === 'buscar')
+                  ? 'bg-[#823B20] text-white font-semibold'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              }`}
+            >
+              <span>Panel gerencial</span>
+              {(vistaActual === 'panel' || (!vistaActual || vistaActual === 'buscar')) && (
+                <span className="w-2 h-2 rounded-full bg-[#E0B25A]"></span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setVistaActual('usuarios')}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-between ${
+                vistaActual === 'usuarios'
+                  ? 'bg-[#823B20] text-white font-semibold'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              }`}
+            >
+              <span>Administración de usuarios</span>
+              {vistaActual === 'usuarios' && (
+                <span className="w-2 h-2 rounded-full bg-[#E0B25A]"></span>
+              )}
+            </button>
+          </>
         )}
 
         {usuario.rol === 'ASESOR' && (
@@ -60,6 +86,17 @@ export default function Navbar({ usuario, onLogout, vistaActual, setVistaActual,
               }`}
             >
               Cobranza y pagos
+            </button>
+            <button
+              type="button"
+              onClick={() => setVistaActual('caja')}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+                vistaActual === 'caja'
+                  ? 'bg-[#823B20] text-white font-semibold'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              }`}
+            >
+              Recepción Hermes (Caja)
             </button>
           </>
         )}

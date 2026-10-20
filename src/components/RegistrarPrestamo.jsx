@@ -64,6 +64,7 @@ export default function RegistrarPrestamo({
   const [representanteLegal, setRepresentanteLegal] = useState(representanteInicial || '');
   const [dniRepresentante, setDniRepresentante] = useState(dniRepInicial || '');
   const [cargoRepresentante, setCargoRepresentante] = useState(cargoRepInicial || 'GERENTE GENERAL');
+  const [dniPresentado, setDniPresentado] = useState('');
   const [plazoMeses, setPlazoMeses] = useState(12);
   const [monto, setMonto] = useState(1000);
 
@@ -124,6 +125,7 @@ export default function RegistrarPrestamo({
     setRepresentanteLegal('');
     setDniRepresentante('');
     setCargoRepresentante('GERENTE GENERAL');
+    setDniPresentado('');
     setError('');
     setEsElegible(true);
     setMotivoRechazo('');
@@ -180,6 +182,11 @@ export default function RegistrarPrestamo({
         if (data.representanteNombre) setRepresentanteLegal(data.representanteNombre);
         if (data.representanteDocumento) setDniRepresentante(data.representanteDocumento);
         if (data.representanteCargo) setCargoRepresentante(data.representanteCargo);
+        if (d.startsWith('10')) {
+          setDniPresentado(d.substring(2, 10));
+        } else {
+          setDniPresentado('');
+        }
       }
       if (!data.elegible) {
         setEsElegible(false);
@@ -272,6 +279,14 @@ export default function RegistrarPrestamo({
         setError('Ingrese o consulte la Razón Social de la empresa.');
         return;
       }
+      if (!dniPresentado.trim()) {
+        setError('El DNI de la persona que se presenta es obligatorio.');
+        return;
+      }
+      if (!/^\d{8}$/.test(dniPresentado.trim())) {
+        setError('El DNI de la persona que se presenta debe tener exactamente 8 dígitos.');
+        return;
+      }
     }
 
     if (!fechaNacimiento) {
@@ -304,14 +319,18 @@ export default function RegistrarPrestamo({
 
     setProcesando(true);
     try {
-      const nuevoContrato = await api.contratos.generar({
+      const payload = {
         dni: dni.trim(),
         nombreCliente: (nombreCliente || representanteLegal).trim(),
         fechaNacimiento,
         fechaPrestamo,
         plazoMeses: Number(plazoMeses),
         monto: Number(monto),
-      });
+      };
+      if (tipoDocumento === 'RUC' || dni.trim().length === 11) {
+        payload.dniPresentado = dniPresentado.trim();
+      }
+      const nuevoContrato = await api.contratos.generar(payload);
       const detalle = await api.contratos.obtener(nuevoContrato.id);
       setContrato(detalle);
       setPaso(2);
@@ -602,18 +621,24 @@ export default function RegistrarPrestamo({
                         className="w-full h-10 px-3 text-sm font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                       />
                     </div>
-                    <div className="sm:col-span-3">
-                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                        DNI del representante
+                    <div className="sm:col-span-6">
+                      <label className="block text-xs font-bold text-[#9C4A2B] mb-1">
+                        DNI de la persona que se presenta *
                       </label>
                       <input
                         type="text"
                         maxLength={8}
-                        value={dniRepresentante}
-                        onChange={(e) => setDniRepresentante(e.target.value)}
-                        placeholder="DNI (8 dígitos)"
-                        className="w-full h-10 px-3 text-sm font-mono rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                        value={dniPresentado}
+                        onChange={(e) => setDniPresentado(e.target.value.replace(/\D/g, ''))}
+                        placeholder="DNI (8 dígitos) de la persona presente"
+                        required={tipoDocumento === 'RUC'}
+                        className="w-full h-10 px-3 text-sm font-mono font-bold rounded-lg border-2 border-[#9C4A2B] bg-white text-[#2A2220] focus:outline-none focus:ring-1 focus:ring-[#9C4A2B]"
                       />
+                      <span className="text-[10px] text-[#6E625B] mt-0.5 block">
+                        {dni.startsWith('10')
+                          ? 'RUC 10: Debe coincidir con el DNI del titular (dígitos 3 al 10).'
+                          : 'RUC 20: El servidor validará coincidencia con el representante legal de SUNAT y vigencia RENIEC.'}
+                      </span>
                     </div>
                     <div className="sm:col-span-3">
                       <label className="block text-xs font-medium text-[#2A2220] mb-1">

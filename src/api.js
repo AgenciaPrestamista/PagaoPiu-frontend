@@ -126,6 +126,54 @@ export const api = {
   panel: {
     obtener: () => request('/panel'),
   },
+  usuarios: {
+    listar: () => request('/usuarios'),
+    crear: (data) =>
+      request('/usuarios', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    cambiarEstado: (id, activo) =>
+      request(`/usuarios/${id}/activo`, {
+        method: 'PUT',
+        body: JSON.stringify({ activo }),
+      }),
+    resetPassword: (id, nuevoPassword) =>
+      request(`/usuarios/${id}/password`, {
+        method: 'PUT',
+        body: JSON.stringify({ nuevoPassword }),
+      }),
+  },
+  sucursales: {
+    listar: () => request('/sucursales'),
+  },
+  caja: {
+    recepcionHermes: (data) =>
+      request('/caja/hermes/recepcion', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    obtenerEstado: (sucursalId) => {
+      const query = sucursalId ? `?sucursalId=${sucursalId}` : '';
+      return request(`/caja/estado${query}`);
+    },
+  },
+  incidencias: {
+    listar: (sucursalId, estado) => {
+      const params = new URLSearchParams();
+      if (sucursalId) params.append('sucursalId', sucursalId);
+      if (estado) params.append('estado', estado);
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      return request(`/incidencias${qs}`);
+    },
+    cerrar: (id, resolucion) =>
+      request(`/incidencias/${id}/cerrar`, {
+        method: 'POST',
+        body: JSON.stringify({ resolucion }),
+      }),
+  },
 };
 
 api.contrato = api.contratos;
+api.sucursal = api.sucursales;
+

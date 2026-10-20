@@ -7,6 +7,8 @@ import RegistrarPrestamo from './components/RegistrarPrestamo';
 import DetallePrestamo from './components/DetallePrestamo';
 import PanelGerente from './components/PanelGerente';
 import CobranzaPagos from './components/CobranzaPagos';
+import AdministracionUsuarios from './components/AdministracionUsuarios';
+import RecepcionHermes from './components/RecepcionHermes';
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
@@ -53,6 +55,12 @@ export default function App() {
       try {
         const u = await api.auth.me();
         setUsuario(u);
+        const vistaGuardada = sessionStorage.getItem('pagaopiu_vista');
+        if (u?.rol === 'GERENTE') {
+          if (!vistaGuardada || vistaGuardada === 'buscar') {
+            setVistaActual('panel');
+          }
+        }
       } catch {
         setUsuario(null);
       } finally {
@@ -143,7 +151,18 @@ export default function App() {
   }
 
   if (!usuario) {
-    return <Login onLoginExitoso={setUsuario} />;
+    return (
+      <Login
+        onLoginExitoso={(u) => {
+          setUsuario(u);
+          if (u?.rol === 'GERENTE') {
+            setVistaActual('panel');
+          } else {
+            setVistaActual('buscar');
+          }
+        }}
+      />
+    );
   }
 
   return (
@@ -165,7 +184,14 @@ export default function App() {
 
       <main className="flex-1 overflow-y-auto min-h-screen">
         {usuario.rol === 'GERENTE' ? (
-          <PanelGerente usuario={usuario} />
+          vistaActual === 'usuarios' ? (
+            <AdministracionUsuarios usuario={usuario} />
+          ) : (
+            <PanelGerente
+              usuario={usuario}
+              onIrAUsuarios={() => setVistaActual('usuarios')}
+            />
+          )
         ) : (
           <>
             {vistaActual === 'buscar' && (
@@ -205,6 +231,10 @@ export default function App() {
                 }}
                 onRetomarContrato={handleRetomarContrato}
               />
+            )}
+
+            {vistaActual === 'caja' && (
+              <RecepcionHermes usuario={usuario} />
             )}
 
             {vistaActual === 'detalle' && (

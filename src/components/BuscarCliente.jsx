@@ -222,10 +222,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               </h2>
               {esJuridica && (
                 <div className="mt-1 text-xs text-[#2A2220]">
-                  <span className="text-[#6E625B]">Representante legal / Encargado:</span>{' '}
-                  <strong className="text-[#9C4A2B]">{resultado.representanteNombre || 'Representante Legal'}</strong>
-                  {resultado.representanteCargo && <span className="text-[#6E625B]"> • {resultado.representanteCargo}</span>}
-                  {resultado.representanteDocumento && <span className="font-mono text-[#6E625B]"> (DNI: {resultado.representanteDocumento})</span>}
+                  <span className="text-[#6E625B]">Cargo de representación requerido:</span>{' '}
+                  <strong className="text-[#9C4A2B]">{resultado.representanteCargo || 'GERENTE GENERAL'}</strong>
                 </div>
               )}
             </div>
@@ -274,12 +272,12 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
           {esJuridica && (
             <div className="mt-3 pt-3 border-t border-[#E3D3C2]/40 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
-                <span className="text-[#6E625B] block text-[11px]">Representante legal / Encargado:</span>
+                <span className="text-[#6E625B] block text-[11px]">Cargo requerido para representación:</span>
                 <span className="font-semibold text-[#2A2220]">
-                  {resultado.representanteNombre || 'Representante Legal debidamente facultado'}
+                  {resultado.representanteCargo || 'GERENTE GENERAL'}
                 </span>
-                <span className="text-[#6E625B] block text-[11px]">
-                  {resultado.representanteCargo || 'GERENTE GENERAL'} {resultado.representanteDocumento ? `(DNI: ${resultado.representanteDocumento})` : ''}
+                <span className="text-[#6E625B] block text-[11px] mt-0.5">
+                  El DNI de la persona que se presenta se validará directamente contra SUNAT y RENIEC en el servidor al formalizar el crédito.
                 </span>
               </div>
               <div>
