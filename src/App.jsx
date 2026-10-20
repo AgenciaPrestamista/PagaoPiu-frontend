@@ -13,21 +13,28 @@ import RecepcionHermes from './components/RecepcionHermes';
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
+  const [cajaAbierta, setCajaAbierta] = useState(false);
 
-  // Vistas: 'buscar', 'registrar', 'cobranza', 'detalle'
+  // Vistas: 'buscar', 'registrar', 'cobranza', 'detalle', 'caja', 'panel', 'usuarios'
   const [vistaActual, setVistaActualState] = useState(() => {
     return sessionStorage.getItem('pagaopiu_vista') || 'buscar';
   });
+
   const [datosCliente, setDatosCliente] = useState(() => {
     const d = sessionStorage.getItem('pagaopiu_datos_cliente');
     return d ? JSON.parse(d) : { dni: '', nombre: '', fechaNac: '' };
   });
+
   const [prestamoSeleccionadoId, setPrestamoSeleccionadoIdState] = useState(() => {
     const val = sessionStorage.getItem('pagaopiu_prestamo_id');
     return val ? Number(val) : null;
   });
 
-  const setVistaActual = (vista) => {
+  const setVistaActual = (vista, forzar = false) => {
+    // Si es asesor y la caja está cerrada, se bloquea cualquier otra pestaña que no sea 'caja'
+    if (!forzar && usuario?.rol === 'ASESOR' && !cajaAbierta && vista !== 'caja') {
+      return;
+    }
     sessionStorage.setItem('pagaopiu_vista', vista);
     setVistaActualState(vista);
   };
@@ -56,9 +63,30 @@ export default function App() {
         const u = await api.auth.me();
         setUsuario(u);
         const vistaGuardada = sessionStorage.getItem('pagaopiu_vista');
+
         if (u?.rol === 'GERENTE') {
-          if (!vistaGuardada || vistaGuardada === 'buscar') {
-            setVistaActual('panel');
+          setCajaAbierta(true);
+          if (!vistaGuardada || vistaGuardada === 'buscar' || vistaGuardada === 'caja') {
+            setVistaActualState('panel');
+            sessionStorage.setItem('pagaopiu_vista', 'panel');
+          } else {
+            setVistaActualState(vistaGuardada);
+          }
+        } else if (u?.rol === 'ASESOR') {
+          try {
+            const estadoCaja = await api.caja.obtenerEstado();
+            if (estadoCaja?.abierta) {
+              setCajaAbierta(true);
+              setVistaActualState(vistaGuardada || 'buscar');
+            } else {
+              setCajaAbierta(false);
+              setVistaActualState('caja');
+              sessionStorage.setItem('pagaopiu_vista', 'caja');
+            }
+          } catch {
+            setCajaAbierta(false);
+            setVistaActualState('caja');
+            sessionStorage.setItem('pagaopiu_vista', 'caja');
           }
         }
       } catch {
@@ -78,8 +106,15 @@ export default function App() {
       sessionStorage.removeItem('pagaopiu_prestamo_id');
       sessionStorage.removeItem('pagaopiu_datos_cliente');
       setUsuario(null);
-      setVistaActual('buscar');
+      setCajaAbierta(false);
+      setVistaActualState('buscar');
     }
+  };
+
+  const handleCajaAbierta = (nuevoEstado) => {
+    setCajaAbierta(true);
+    sessionStorage.setItem('pagaopiu_vista', 'buscar');
+    setVistaActualState('buscar');
   };
 
   const handleIniciarPrestamo = (dni, nombre, fechaNac = '', datosExtra = {}) => {
@@ -153,12 +188,25 @@ export default function App() {
   if (!usuario) {
     return (
       <Login
-        onLoginExitoso={(u) => {
+        onLoginExitoso={async (u) => {
           setUsuario(u);
           if (u?.rol === 'GERENTE') {
-            setVistaActual('panel');
+            setCajaAbierta(true);
+            setVistaActual('panel', true);
           } else {
-            setVistaActual('buscar');
+            try {
+              const estadoCaja = await api.caja.obtenerEstado();
+              if (estadoCaja?.abierta) {
+                setCajaAbierta(true);
+                setVistaActual('buscar', true);
+              } else {
+                setCajaAbierta(false);
+                setVistaActual('caja', true);
+              }
+            } catch {
+              setCajaAbierta(false);
+              setVistaActual('caja', true);
+            }
           }
         }}
       />
@@ -169,6 +217,7 @@ export default function App() {
     <div className="min-h-screen bg-[#FBF6F0] text-[#2A2220] flex">
       <Navbar
         usuario={usuario}
+        cajaAbierta={cajaAbierta}
         onLogout={handleLogout}
         vistaActual={vistaActual}
         setVistaActual={setVistaActual}
@@ -192,6 +241,15 @@ export default function App() {
               onIrAUsuarios={() => setVistaActual('usuarios')}
             />
           )
+        ) : !cajaAbierta ? (
+          <RecepcionHermes
+            usuario={usuario}
+            onCajaAbierta={handleCajaAbierta}
+            onIrAOperaciones={() => {
+              sessionStorage.setItem('pagaopiu_vista', 'buscar');
+              setVistaActualState('buscar');
+            }}
+          />
         ) : (
           <>
             {vistaActual === 'buscar' && (
@@ -234,7 +292,14 @@ export default function App() {
             )}
 
             {vistaActual === 'caja' && (
-              <RecepcionHermes usuario={usuario} />
+              <RecepcionHermes
+                usuario={usuario}
+                onCajaAbierta={handleCajaAbierta}
+                onIrAOperaciones={() => {
+                  sessionStorage.setItem('pagaopiu_vista', 'buscar');
+                  setVistaActualState('buscar');
+                }}
+              />
             )}
 
             {vistaActual === 'detalle' && (

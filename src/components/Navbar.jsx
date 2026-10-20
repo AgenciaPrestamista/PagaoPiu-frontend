@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 
-export default function Navbar({ usuario, onLogout, vistaActual, setVistaActual, onAbrirCambiarPassword }) {
+export default function Navbar({
+  usuario,
+  cajaAbierta = true,
+  onLogout,
+  vistaActual,
+  setVistaActual,
+  onAbrirCambiarPassword,
+}) {
   const [ajustesAbierto, setAjustesAbierto] = useState(false);
 
   if (!usuario) return null;
@@ -18,7 +25,7 @@ export default function Navbar({ usuario, onLogout, vistaActual, setVistaActual,
       </div>
 
       {/* Navegación según Rol */}
-      <nav className="flex-1 p-3.5 space-y-1.5">
+      <nav className="flex-1 p-3.5 space-y-1.5 overflow-y-auto">
         {usuario.rol === 'GERENTE' && (
           <>
             <button
@@ -54,50 +61,92 @@ export default function Navbar({ usuario, onLogout, vistaActual, setVistaActual,
 
         {usuario.rol === 'ASESOR' && (
           <>
+            {/* Pestaña: Consulta de clientes */}
             <button
               type="button"
-              onClick={() => setVistaActual('buscar')}
-              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                vistaActual === 'buscar'
-                  ? 'bg-[#823B20] text-white font-semibold'
-                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              disabled={!cajaAbierta}
+              onClick={() => cajaAbierta && setVistaActual('buscar')}
+              title={!cajaAbierta ? 'Caja cerrada: debe recepcionar la remesa Hermes para operar' : ''}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition flex items-center justify-between ${
+                !cajaAbierta
+                  ? 'opacity-40 cursor-not-allowed text-[#F6E6DC]'
+                  : vistaActual === 'buscar'
+                  ? 'bg-[#823B20] text-white font-semibold cursor-pointer'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white cursor-pointer'
               }`}
             >
-              Consulta de clientes
+              <span>Consulta de clientes</span>
+              {!cajaAbierta && <span className="text-xs opacity-75">🔒</span>}
             </button>
+
+            {/* Pestaña: Nuevo préstamo */}
             <button
               type="button"
-              onClick={() => setVistaActual('registrar')}
-              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                vistaActual === 'registrar'
-                  ? 'bg-[#823B20] text-white font-semibold'
-                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              disabled={!cajaAbierta}
+              onClick={() => cajaAbierta && setVistaActual('registrar')}
+              title={!cajaAbierta ? 'Caja cerrada: debe recepcionar la remesa Hermes para operar' : ''}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition flex items-center justify-between ${
+                !cajaAbierta
+                  ? 'opacity-40 cursor-not-allowed text-[#F6E6DC]'
+                  : vistaActual === 'registrar'
+                  ? 'bg-[#823B20] text-white font-semibold cursor-pointer'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white cursor-pointer'
               }`}
             >
-              Nuevo préstamo
+              <span>Nuevo préstamo</span>
+              {!cajaAbierta && <span className="text-xs opacity-75">🔒</span>}
             </button>
+
+            {/* Pestaña: Cobranza y pagos */}
             <button
               type="button"
-              onClick={() => setVistaActual('cobranza')}
-              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer ${
-                vistaActual === 'cobranza'
-                  ? 'bg-[#823B20] text-white font-semibold'
-                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
+              disabled={!cajaAbierta}
+              onClick={() => cajaAbierta && setVistaActual('cobranza')}
+              title={!cajaAbierta ? 'Caja cerrada: debe recepcionar la remesa Hermes para operar' : ''}
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition flex items-center justify-between ${
+                !cajaAbierta
+                  ? 'opacity-40 cursor-not-allowed text-[#F6E6DC]'
+                  : vistaActual === 'cobranza'
+                  ? 'bg-[#823B20] text-white font-semibold cursor-pointer'
+                  : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white cursor-pointer'
               }`}
             >
-              Cobranza y pagos
+              <span>Cobranza y pagos</span>
+              {!cajaAbierta && <span className="text-xs opacity-75">🔒</span>}
             </button>
+
+            {/* Pestaña: Recepción Hermes (Caja) */}
             <button
               type="button"
               onClick={() => setVistaActual('caja')}
-              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer ${
+              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-between ${
                 vistaActual === 'caja'
-                  ? 'bg-[#823B20] text-white font-semibold'
+                  ? 'bg-[#823B20] text-white font-semibold ring-1 ring-[#E0B25A]/50'
+                  : !cajaAbierta
+                  ? 'bg-[#823B20]/70 text-[#FFE5A3] font-semibold border border-[#E0B25A]/50'
                   : 'text-[#F6E6DC] hover:bg-[#823B20]/60 hover:text-white'
               }`}
             >
-              Recepción Hermes (Caja)
+              <span>Recepción Hermes (Caja)</span>
+              {!cajaAbierta ? (
+                <span className="text-[10px] bg-[#E0B25A] text-[#2A2220] px-1.5 py-0.5 rounded-full font-bold">
+                  Requerido
+                </span>
+              ) : (
+                vistaActual === 'caja' && <span className="w-2 h-2 rounded-full bg-[#E0B25A]"></span>
+              )}
             </button>
+
+            {/* Aviso visual en el Navbar si la caja está cerrada */}
+            {!cajaAbierta && (
+              <div className="mx-1 mt-3 p-3 rounded-xl bg-[#823B20]/80 border border-[#E0B25A]/40 text-[11px] text-[#F6E6DC] leading-relaxed shadow-xs">
+                <div className="flex items-center gap-1.5 font-bold text-[#FFE5A3] mb-1">
+                  <span>🔒</span>
+                  <span>Caja cerrada</span>
+                </div>
+                Recepcione la remesa Hermes para desbloquear las operaciones de la agencia.
+              </div>
+            )}
           </>
         )}
       </nav>
