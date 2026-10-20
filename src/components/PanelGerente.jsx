@@ -397,7 +397,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                       rows={3}
                       value={resolucionTexto}
                       onChange={(e) => setResolucionTexto(e.target.value)}
-                      placeholder='Ej. "Hermes repuso el monto observado", "Pérdida asumida por seguro", "Aclarado tras arqueo"'
+                      placeholder="Ingrese la resolución escrita detallada para el cierre de la incidencia..."
                       required
                       className="w-full p-2.5 text-xs rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                     />

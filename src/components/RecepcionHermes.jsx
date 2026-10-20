@@ -5,7 +5,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
   const [estadoCaja, setEstadoCaja] = useState(null);
   const [cargandoCaja, setCargandoCaja] = useState(true);
 
-  // Campos sin datos mockeados: deben ser ingresados manualmente por el asesor
+  // Campos obligatorios ingresados manualmente por el asesor
   const [codigoRemesa, setCodigoRemesa] = useState('');
   const [montoApto, setMontoApto] = useState('');
   const [montoObservado, setMontoObservado] = useState('');
@@ -343,7 +343,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
                   value={motivo}
                   onChange={(e) => setMotivo(e.target.value)}
                   rows={2}
-                  placeholder="Especifique el motivo (ej. 1 fajo de billetes húmedos o faltante en remesa)"
+                  placeholder="Especifique detalladamente el motivo de la discrepancia o billetes observados..."
                   required={requiereMotivo}
                   className="w-full p-2.5 text-xs rounded-lg border border-amber-300 bg-amber-50/40 text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                 />

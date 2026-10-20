@@ -61,13 +61,13 @@ export default function ComprobanteModal({ pago, onCerrar }) {
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 pb-4 border-b border-black items-center">
               <div className="sm:col-span-7">
                 <div className="font-bold text-sm tracking-wider uppercase font-serif">
-                  PRÉSTAMOS DEL NORTE S.A.C.
+                  PRESTAMOS CASTILLO
                 </div>
                 <div className="text-[11px] text-gray-700 mt-1">
-                  <strong>RUC:</strong> 20123456789
+                  <strong>RUC:</strong> 20608912345
                 </div>
                 <div className="text-[11px] text-gray-700">
-                  <strong>Dirección:</strong> Av. Principal 123, Trujillo
+                  <strong>Dirección:</strong> Av. Larco 456, Trujillo
                 </div>
                 <div className="text-[10px] text-gray-500 mt-0.5">
                   Agencia: {pago.sucursalNombre || 'Trujillo'} • Asesor: {pago.asesorNombre || 'Caja Ventanilla'}
@@ -75,7 +75,7 @@ export default function ComprobanteModal({ pago, onCerrar }) {
               </div>
 
               <div className="sm:col-span-5 text-center border-2 border-black p-3 bg-gray-50/50">
-                <div className="text-[11px] font-bold">R.U.C. 20123456789</div>
+                <div className="text-[11px] font-bold">R.U.C. 20608912345</div>
                 <div className="text-xs font-bold uppercase my-1 text-[#9C4A2B] tracking-wide">
                   {tipoTitulo}
                 </div>

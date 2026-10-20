@@ -44,13 +44,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
     setResultado(null);
     setPrestamosCliente([]);
     setError('');
-    if (tipo === 'RUC') {
-      setFechaNacimiento('2015-01-01');
-      setEdadCliente(null);
-    } else {
-      setFechaNacimiento('');
-      setEdadCliente(null);
-    }
+    setFechaNacimiento('');
+    setEdadCliente(null);
   };
 
   const handleFechaNacChange = (e) => {
@@ -100,10 +95,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
     }
   };
 
-  const buscarDemo = (numDoc) => {
-    setDni(numDoc);
-    consultarDocumento(numDoc);
-  };
+
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-8">
@@ -161,50 +153,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
           </div>
         )}
 
-        {/* Accesos de prueba */}
-        <div className="mt-4 pt-3.5 border-t border-[#E3D3C2]/40">
-          <span className="block text-[11px] font-medium text-[#6E625B] uppercase tracking-wider mb-2">
-            Casos de prueba {tipoDocumento === 'DNI' ? '(Personas Naturales)' : '(Empresas)'}
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            {tipoDocumento === 'DNI' ? (
-              [
-                { label: 'Pérez López (10000001)', doc: '10000001' },
-                { label: 'Castillo Terrones (27427864)', doc: '27427864' },
-                { label: 'Núñez Ávila (10000003)', doc: '10000003' },
-                { label: 'Fallecido (99999901)', doc: '99999901' },
-                { label: 'DNI Vencido (99999902)', doc: '99999902' },
-                { label: 'Extranjero (99999903)', doc: '99999903' },
-              ].map(({ label, doc }) => (
-                <button
-                  key={doc}
-                  type="button"
-                  onClick={() => buscarDemo(doc)}
-                  className="text-xs py-1 px-2.5 rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer"
-                >
-                  {label}
-                </button>
-              ))
-            ) : (
-              [
-                { label: 'Agrolight Perú S.A.C. (20552103816)', doc: '20552103816' },
-                { label: 'El Sol S.A.C. (20141878477)', doc: '20141878477' },
-                { label: 'Comercial Los Andes S.A.C. (20987654321)', doc: '20987654321' },
-                { label: 'Préstamos del Norte S.A.C. (20123456789)', doc: '20123456789' },
-                { label: 'Distribuidora Norteña S.R.L. (20555666771)', doc: '20555666771' },
-              ].map(({ label, doc }) => (
-                <button
-                  key={doc}
-                  type="button"
-                  onClick={() => buscarDemo(doc)}
-                  className="text-xs py-1 px-2.5 rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer"
-                >
-                  {label}
-                </button>
-              ))
-            )}
-          </div>
-        </div>
+
       </div>
 
       {/* Ficha de Resultado */}

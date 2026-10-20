@@ -57,7 +57,7 @@ export default function RegistrarPrestamo({
   );
   const [dni, setDni] = useState(dniInicial || '');
   const [nombreCliente, setNombreCliente] = useState(nombreInicial || '');
-  const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || (dniInicial && dniInicial.length === 11 ? '2015-01-01' : ''));
+  const [fechaNacimiento, setFechaNacimiento] = useState(fechaNacInicial || '');
   const [edadCliente, setEdadCliente] = useState(fechaNacInicial ? calcularEdad(fechaNacInicial) : null);
   const [fechaPrestamo] = useState(obtenerHoyLima());
   const [direccionEmpresa, setDireccionEmpresa] = useState(direccionInicial || '');
@@ -65,8 +65,8 @@ export default function RegistrarPrestamo({
   const [dniRepresentante, setDniRepresentante] = useState(dniRepInicial || '');
   const [cargoRepresentante, setCargoRepresentante] = useState(cargoRepInicial || 'GERENTE GENERAL');
   const [dniPresentado, setDniPresentado] = useState('');
-  const [plazoMeses, setPlazoMeses] = useState(12);
-  const [monto, setMonto] = useState(1000);
+  const [plazoMeses, setPlazoMeses] = useState('');
+  const [monto, setMonto] = useState('');
 
   const [simulacion, setSimulacion] = useState(null);
   const [cargandoSimulacion, setCargandoSimulacion] = useState(false);
@@ -130,9 +130,7 @@ export default function RegistrarPrestamo({
     setEsElegible(true);
     setMotivoRechazo('');
     if (nuevoTipo === 'RUC') {
-      if (!fechaNacimiento) {
-        setFechaNacimiento('2015-01-01');
-      }
+      setFechaNacimiento('');
       setEdadCliente(null);
     } else {
       setFechaNacimiento(fechaNacInicial || '');
@@ -616,7 +614,7 @@ export default function RegistrarPrestamo({
                         type="text"
                         value={nombreCliente}
                         onChange={(e) => setNombreCliente(e.target.value)}
-                        placeholder="Ej. AGROLIGHT PERU S.A.C."
+                        placeholder="Razón Social completa de la empresa"
                         required={tipoDocumento === 'RUC'}
                         className="w-full h-10 px-3 text-sm font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                       />
@@ -669,66 +667,7 @@ export default function RegistrarPrestamo({
                 </div>
               )}
 
-              {/* Accesos rápidos de prueba */}
-              <div className="flex items-center gap-1.5 flex-wrap text-xs pt-0.5">
-                <span className="text-[11px] font-semibold text-[#6E625B] uppercase mr-1">Casos rápidos:</span>
-                {tipoDocumento === 'DNI' ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('10000001'); consultarDocumento('10000001'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      10000001 (Pérez)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('27427864'); consultarDocumento('27427864'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      27427864 (Castillo)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('10000003'); consultarDocumento('10000003'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      10000003 (Núñez)
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('20987654321'); consultarDocumento('20987654321'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      20987654321 (Los Andes)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('20123456789'); consultarDocumento('20123456789'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      20123456789 (Del Norte)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('20552103816'); consultarDocumento('20552103816'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      20552103816 (Agrolight)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDni('20141878477'); consultarDocumento('20141878477'); }}
-                      className="px-2 py-0.5 rounded border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] text-[11px] cursor-pointer"
-                    >
-                      20141878477 (El Sol)
-                    </button>
-                  </>
-                )}
-              </div>
+
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                 <div>
@@ -789,6 +728,7 @@ export default function RegistrarPrestamo({
                     type="number"
                     min="1"
                     max="60"
+                    placeholder="Número de meses (1 a 60)"
                     value={plazoMeses}
                     onChange={(e) => setPlazoMeses(e.target.value)}
                     required
@@ -808,6 +748,7 @@ export default function RegistrarPrestamo({
                       step="0.01"
                       min="1"
                       max="10000"
+                      placeholder="0.00"
                       value={monto}
                       onChange={(e) => {
                         const val = e.target.value;
@@ -1003,7 +944,7 @@ export default function RegistrarPrestamo({
                 </label>
                 <input
                   type="text"
-                  placeholder={`Ej. ${contrato.numeroContrato}`}
+                  placeholder="Número de contrato a verificar"
                   value={numeroContratoDigitado}
                   onChange={(e) => setNumeroContratoDigitado(e.target.value)}
                   required
@@ -1068,7 +1009,7 @@ export default function RegistrarPrestamo({
                   rows="3"
                   value={motivoCancelacion}
                   onChange={(e) => setMotivoCancelacion(e.target.value)}
-                  placeholder="Ej. El cliente desistió del crédito por motivos personales..."
+                  placeholder="Especifique el motivo de anulación del contrato..."
                   required
                   className="w-full p-2.5 text-xs rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
                 ></textarea>

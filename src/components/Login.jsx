@@ -21,9 +21,7 @@ export default function Login({ onLoginExitoso }) {
     }
   };
 
-  const seleccionarDemo = (u) => {
-    setUsername(u);
-  };
+
 
   return (
     <div className="min-h-screen bg-[#FBF6F0] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -83,30 +81,7 @@ export default function Login({ onLoginExitoso }) {
             </button>
           </form>
 
-          <div className="mt-6 pt-5 border-t border-[#E3D3C2]/40">
-            <span className="block text-[11px] font-medium text-[#6E625B] uppercase tracking-wider mb-2">
-              Accesos de demostración
-            </span>
-            <div className="grid grid-cols-3 gap-1.5">
-              {[
-                { label: 'Gerente', user: 'gerente' },
-                { label: 'Chimbote', user: 'asesor.chimbote' },
-                { label: 'Trujillo', user: 'asesor.trujillo' },
-                { label: 'Chiclayo', user: 'asesor.chiclayo' },
-                { label: 'Piura', user: 'asesor.piura' },
-                { label: 'Tumbes', user: 'asesor.tumbes' },
-              ].map(({ label, user }) => (
-                <button
-                  key={user}
-                  type="button"
-                  onClick={() => seleccionarDemo(user)}
-                  className="py-1 px-2 text-[11px] font-medium rounded-md border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] hover:text-[#2A2220] transition cursor-pointer text-center truncate"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

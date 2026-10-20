@@ -15,49 +15,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
   const [error, setError] = useState('');
   const [alertaReactivacion, setAlertaReactivacion] = useState(false);
 
-  // Escenarios demo para evaluación en vivo solicitados
-  const escenariosDemo = [
-    {
-      titulo: '1. Préstamo al día',
-      dni: '27427864',
-      nombre: 'CASTILLO TERRONES, JOSE PEDRO',
-      agencia: 'Trujillo',
-      estado: 'VIGENTE',
-      desc: 'Cuotas 1 y 2 pagadas puntualmente. Restante al día.',
-      color: 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50',
-      badge: 'bg-emerald-100 text-emerald-800',
-    },
-    {
-      titulo: '2. Cliente moroso',
-      dni: '10000001',
-      nombre: 'Juan Carlos Pérez López',
-      agencia: 'Piura',
-      estado: 'MOROSO',
-      desc: 'Cuota vencida (< hoy). Al pagarla revierte a ACTIVO.',
-      color: 'border-amber-200 bg-amber-50/50 hover:bg-amber-50',
-      badge: 'bg-amber-100 text-amber-800',
-    },
-    {
-      titulo: '3. Extrajudicial',
-      dni: '10000002',
-      nombre: 'María Elena García Ríos',
-      agencia: 'Chiclayo',
-      estado: 'EXTRAJUDICIAL',
-      desc: 'Atraso ≥ 365 días. Bloqueado: no admite pagos en ventanilla.',
-      color: 'border-red-200 bg-red-50/50 hover:bg-red-50',
-      badge: 'bg-red-100 text-red-800',
-    },
-    {
-      titulo: '4. Al tope de deuda',
-      dni: '10000006',
-      nombre: 'César Abraham Vallejo Mendoza',
-      agencia: 'Chimbote',
-      estado: 'VIGENTE',
-      desc: 'Saldo S/ 10,000. Amortizar cuotas libera cupo crediticio.',
-      color: 'border-sky-200 bg-sky-50/50 hover:bg-sky-50',
-      badge: 'bg-sky-100 text-sky-800',
-    },
-  ];
+
 
   const cargarPrestamoPorId = async (id) => {
     try {
@@ -119,34 +77,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
     }
   };
 
-  const seleccionarEscenarioDemo = (dni) => {
-    setCriterioBusqueda(dni);
-    setTipoBusqueda('dni');
-    buscarDirectoPorDni(dni);
-  };
 
-  const buscarDirectoPorDni = async (dni) => {
-    setError('');
-    setMensajeExito('');
-    setCargando(true);
-    setPrestamosEncontrados([]);
-    setPrestamoSeleccionado(null);
-
-    try {
-      const prestamos = await api.prestamo.listarPorClienteDni(dni);
-      if (!prestamos || prestamos.length === 0) {
-        setError(`No se encontraron préstamos activos para el DNI ${dni}.`);
-      } else if (prestamos.length === 1) {
-        await cargarPrestamoPorId(prestamos[0].id);
-      } else {
-        setPrestamosEncontrados(prestamos);
-      }
-    } catch (err) {
-      setError(err.message || 'Error al consultar préstamos');
-    } finally {
-      setCargando(false);
-    }
-  };
 
   // R10: Cobro secuencial de la cuota pendiente más antigua
   const handlePagarSiguienteCuota = async () => {
@@ -280,38 +211,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
         )}
       </div>
 
-      {/* Escenarios Demo de Evaluación */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#2A2220]">
-            Escenarios representativos para evaluación
-          </span>
-          <span className="text-[11px] text-[#6E625B]">Haga clic en cualquiera para cargar sus cuotas</span>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {escenariosDemo.map((esc) => (
-            <button
-              key={esc.dni}
-              type="button"
-              onClick={() => seleccionarEscenarioDemo(esc.dni)}
-              className={`p-3.5 rounded-xl border text-left transition cursor-pointer shadow-2xs ${esc.color}`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold text-[#2A2220]">{esc.titulo}</span>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${esc.badge}`}>
-                  {esc.estado}
-                </span>
-              </div>
-              <div className="text-xs font-medium text-[#2A2220] truncate">{esc.nombre}</div>
-              <div className="text-[11px] font-mono text-[#6E625B]">DNI {esc.dni} • {esc.agencia}</div>
-              <p className="text-[11px] text-[#6E625B] mt-1.5 leading-snug border-t border-[#E3D3C2]/40 pt-1.5">
-                {esc.desc}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Barra de Búsqueda */}
       <div className="bg-white rounded-xl border border-[#E3D3C2] p-5 mb-6 shadow-2xs">
@@ -340,7 +240,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
           <div className="flex-1">
             <input
               type="text"
-              placeholder={tipoBusqueda === 'dni' ? 'Ingrese DNI del cliente (ej. 27427864)' : 'Ingrese N° de préstamo (ej. 1)'}
+              placeholder={tipoBusqueda === 'dni' ? 'Ingrese número de DNI del cliente (8 dígitos)' : 'Ingrese número de préstamo'}
               value={criterioBusqueda}
               onChange={(e) => setCriterioBusqueda(e.target.value)}
               className="w-full h-10 px-3.5 text-xs rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
