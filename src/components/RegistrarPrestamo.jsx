@@ -913,7 +913,7 @@ export default function RegistrarPrestamo({
                   {contrato.numeroContrato}
                 </h2>
                 <div className="text-xs text-[#6E625B]">
-                  Cliente: <strong>{contrato.clienteNombre}</strong> ({esJuridica ? 'RUC' : 'DNI'} {contrato.clienteDni}) • S/ {Number(contrato.capital).toFixed(2)}
+                  Cliente: <strong>{contrato.clienteNombre}</strong> ({esJuridica ? 'RUC' : 'DNI'} {contrato.clienteDni}) · S/ {Number(contrato.capital).toFixed(2)}
                 </div>
               </div>
 

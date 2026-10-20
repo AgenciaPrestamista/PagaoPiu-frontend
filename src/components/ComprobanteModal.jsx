@@ -70,7 +70,7 @@ export default function ComprobanteModal({ pago, onCerrar }) {
                   <strong>Dirección:</strong> Av. Larco 456, Trujillo
                 </div>
                 <div className="text-[10px] text-gray-500 mt-0.5">
-                  Agencia: {pago.sucursalNombre || 'Trujillo'} • Asesor: {pago.asesorNombre || 'Caja Ventanilla'}
+                  Agencia: {pago.sucursalNombre || 'Trujillo'} · Asesor: {pago.asesorNombre || 'Caja Ventanilla'}
                 </div>
               </div>
 

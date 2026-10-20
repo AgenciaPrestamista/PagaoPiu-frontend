@@ -116,24 +116,26 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Encabezado */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold tracking-tight text-[#2A2220]">
+        <h1 className="text-xl font-bold tracking-tight text-[#1F1B1A]">
           {cajaEstaAbierta ? 'Estado de Caja y Remesas Hermes' : 'Apertura de Caja — Recepción Hermes'}
         </h1>
-        <p className="text-xs text-[#6E625B] mt-0.5">
+        <p className="text-xs text-stone-500 mt-0.5">
           Agencia {sucursalNombre} · Transporte de caudales y apertura operativa diaria
         </p>
       </div>
 
       {/* Banner si la caja está CERRADA */}
       {!cajaEstaAbierta && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-50 border-2 border-amber-300 text-amber-900 shadow-xs">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">🔒</span>
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-900 shadow-xs">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+              <i className="bi bi-shield-lock text-xl"></i>
+            </div>
             <div className="text-xs">
               <strong className="font-bold text-sm block mb-1">
                 Caja Cerrada — Operaciones y consultas bloqueadas
               </strong>
-              <p className="leading-relaxed">
+              <p className="leading-relaxed text-amber-950/80">
                 Para habilitar las funciones del sistema (consulta de clientes, generación de préstamos y cobranzas), debe recepcionar la remesa diaria de caudales de <strong>Hermes</strong> y registrar los fondos aptos con los que abrirá la caja. Las demás pestañas se mantendrán bloqueadas hasta completar este paso obligatorio.
               </p>
             </div>
@@ -143,10 +145,12 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
 
       {/* Banner si la caja está ABIERTA */}
       {cajaEstaAbierta && (
-        <div className="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 shadow-xs">
+        <div className="mb-6 p-4 rounded-2xl bg-emerald-50/90 border border-emerald-300 text-emerald-950 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-2xl text-emerald-700">✓</span>
+            <div className="flex items-center gap-3.5 text-xs">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <i className="bi bi-check2-circle text-2xl text-emerald-700"></i>
+              </div>
               <div>
                 <strong className="font-bold text-sm block">Caja Abierta y Operativa</strong>
                 <p className="text-emerald-800">
@@ -158,9 +162,10 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
               <button
                 type="button"
                 onClick={onIrAOperaciones}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 transition cursor-pointer whitespace-nowrap shadow-xs self-start sm:self-auto"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white transition cursor-pointer whitespace-nowrap shadow-xs self-start sm:self-auto"
               >
-                Ir a Consulta de Clientes →
+                <span>Ir a Consulta de Clientes</span>
+                <i className="bi bi-arrow-right text-xs"></i>
               </button>
             )}
           </div>
@@ -168,44 +173,46 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
       )}
 
       {/* Estado Actual de Caja (Datos reales del backend) */}
-      <div className="bg-white rounded-xl border border-[#E3D3C2] p-5 mb-6 shadow-2xs">
-        <div className="flex items-center justify-between pb-3 border-b border-[#E3D3C2]/40 mb-3">
-          <span className="text-[11px] font-bold text-[#6E625B] uppercase tracking-wider">
+      <div className="bg-white rounded-2xl border border-stone-200/90 p-5 mb-6 shadow-xs">
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
+          <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
             Resumen de Caja de la Sucursal para Hoy
           </span>
           {cajaEstaAbierta ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              ● Caja Abierta y Operativa
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Caja Abierta y Operativa
             </span>
           ) : (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-              ○ Caja Cerrada (Pendiente apertura)
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              Caja Cerrada (Pendiente apertura)
             </span>
           )}
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
           <div>
-            <span className="text-[#6E625B] block text-[11px]">Saldo Disponible en Caja</span>
-            <span className="text-base font-bold text-emerald-800">
+            <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Saldo Disponible en Caja</span>
+            <span className="text-base font-bold text-emerald-800 font-mono">
               {formatoMoneda(estadoCaja?.saldoDisponible)}
             </span>
           </div>
           <div>
-            <span className="text-[#6E625B] block text-[11px]">Monto Observado Retenido</span>
-            <span className="text-base font-bold text-amber-800">
+            <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Monto Observado Retenido</span>
+            <span className="text-base font-bold text-amber-800 font-mono">
               {formatoMoneda(estadoCaja?.montoObservadoAcumulado)}
             </span>
           </div>
           <div>
-            <span className="text-[#6E625B] block text-[11px]">Sucursal</span>
-            <span className="font-semibold text-[#2A2220]">
+            <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Sucursal</span>
+            <span className="font-semibold text-[#1F1B1A]">
               {sucursalNombre}
             </span>
           </div>
           <div>
-            <span className="text-[#6E625B] block text-[11px]">Aperturado por</span>
-            <span className="font-medium text-[#2A2220]">
+            <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Aperturado por</span>
+            <span className="font-medium text-[#1F1B1A]">
               {estadoCaja?.usuarioApertura || 'Pendiente de apertura'}
             </span>
           </div>
@@ -214,36 +221,38 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
 
       {/* Alertas de error o éxito */}
       {error && (
-        <div className="mb-5 p-3.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-          <strong className="font-semibold">Error:</strong> {error}
+        <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+          <i className="bi bi-exclamation-circle-fill text-rose-600 shrink-0"></i>
+          <div><strong className="font-semibold">Error:</strong> {error}</div>
         </div>
       )}
 
       {mensajeExito && (
-        <div className="mb-5 p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
-          <strong className="font-semibold">Éxito:</strong> {mensajeExito}
+        <div className="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+          <i className="bi bi-check-circle-fill text-emerald-600 shrink-0"></i>
+          <div><strong className="font-semibold">Éxito:</strong> {mensajeExito}</div>
         </div>
       )}
 
       {/* Formulario de Recepción Hermes (Requerido si caja cerrada, opcional si caja abierta) */}
       {!cajaEstaAbierta || mostrarFormAdicional ? (
-        <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 shadow-2xs">
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-6 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-[#2A2220]">
+              <h2 className="text-sm font-bold text-[#1F1B1A]">
                 {cajaEstaAbierta
                   ? 'Registrar Entrega Adicional de Hermes'
                   : 'Recepción de Remesa Hermes y Apertura de Caja'}
               </h2>
-              <p className="text-xs text-[#6E625B] mt-0.5">
-                Monto esperado diario: <strong className="text-[#2A2220]">S/ 50,000.00</strong>. Digite el código de remesa de un solo uso y registre el conteo físico de billetes aptos y observados.
+              <p className="text-xs text-stone-500 mt-0.5">
+                Monto esperado diario: <strong className="text-[#1F1B1A] font-mono">S/ 50,000.00</strong>. Digite el código de remesa de un solo uso y registre el conteo físico de billetes aptos y observados.
               </p>
             </div>
             {cajaEstaAbierta && (
               <button
                 type="button"
                 onClick={() => setMostrarFormAdicional(false)}
-                className="text-xs text-[#6E625B] hover:text-[#2A2220] transition cursor-pointer"
+                className="text-xs text-stone-500 hover:text-stone-800 transition cursor-pointer"
               >
                 Cancelar
               </button>
@@ -253,22 +262,22 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-[#2A2220] mb-1">
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1.5">
                   Código de remesa Hermes *
                 </label>
                 <input
                   type="text"
                   value={codigoRemesa}
                   onChange={(e) => setCodigoRemesa(e.target.value.toUpperCase())}
-                  placeholder="Código único de remesa"
+                  placeholder="ej. HERMES-TRU-1029"
                   required
-                  className="w-full h-10 px-3 text-xs font-mono font-bold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                  className="w-full h-10 px-3 text-xs font-mono font-bold rounded-xl border border-stone-300 bg-white text-[#1F1B1A] focus:outline-none focus:border-[#752F17] focus:ring-2 focus:ring-[#752F17]/15"
                 />
-                <span className="text-[10px] text-[#6E625B]">Código de un solo uso provisto por el blindado</span>
+                <span className="text-[10px] text-stone-400 mt-0.5 block">Código de un solo uso provisto por el blindado</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#2A2220] mb-1">
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1.5">
                   Monto recibido apto (S/) *
                 </label>
                 <input
@@ -279,13 +288,13 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
                   onChange={(e) => setMontoApto(e.target.value)}
                   placeholder="0.00"
                   required
-                  className="w-full h-10 px-3 text-sm font-bold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                  className="w-full h-10 px-3 text-sm font-bold font-mono rounded-xl border border-stone-300 bg-white text-[#1F1B1A] focus:outline-none focus:border-[#752F17] focus:ring-2 focus:ring-[#752F17]/15"
                 />
-                <span className="text-[10px] text-[#6E625B]">Ingresa al saldo disponible de caja</span>
+                <span className="text-[10px] text-stone-400 mt-0.5 block">Ingresa al saldo disponible de caja</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#2A2220] mb-1">
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1.5">
                   Monto observado / dañado (S/)
                 </label>
                 <input
@@ -295,40 +304,48 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
                   value={montoObservado}
                   onChange={(e) => setMontoObservado(e.target.value)}
                   placeholder="0.00 (opcional)"
-                  className="w-full h-10 px-3 text-sm font-bold rounded-lg border border-[#E3D3C2] bg-white text-amber-800 focus:outline-none focus:border-[#9C4A2B]"
+                  className="w-full h-10 px-3 text-sm font-bold font-mono rounded-xl border border-stone-300 bg-white text-amber-800 focus:outline-none focus:border-[#752F17] focus:ring-2 focus:ring-[#752F17]/15"
                 />
-                <span className="text-[10px] text-[#6E625B]">Fuera del saldo disponible</span>
+                <span className="text-[10px] text-stone-400 mt-0.5 block">Fuera del saldo disponible</span>
               </div>
             </div>
 
             {/* Resumen dinámico del conteo */}
             {tieneDatos && (
               <div
-                className={`p-3 rounded-lg text-xs border ${
+                className={`p-3.5 rounded-xl text-xs border ${
                   requiereMotivo
-                    ? 'bg-amber-50/70 border-amber-200 text-amber-900'
-                    : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                    ? 'bg-amber-50/80 border-amber-300 text-amber-900'
+                    : 'bg-emerald-50/80 border-emerald-300 text-emerald-900'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
                     <span>
-                      Total entregado (Apto + Obs): <strong>{formatoMoneda(sumaTotal)}</strong>
+                      Total entregado (Apto + Obs): <strong className="font-mono">{formatoMoneda(sumaTotal)}</strong>
                     </span>
                     <span className="mx-2">·</span>
                     <span>
-                      Esperado: <strong>S/ 50,000.00</strong>
+                      Esperado: <strong className="font-mono">S/ 50,000.00</strong>
                     </span>
                     {Math.abs(sumaTotal - 50000) > 0.001 && (
-                      <span className="ml-2 font-semibold text-red-700">
+                      <span className="ml-2 font-semibold text-rose-700 font-mono">
                         (Diferencia: {formatoMoneda(sumaTotal - 50000)})
                       </span>
                     )}
                   </div>
-                  <div className="font-semibold">
-                    {requiereMotivo
-                      ? '⚠️ Generará incidencia ABIERTA para resolución del Gerente'
-                      : '✓ Conforme (S/ 50,000.00)'}
+                  <div className="font-semibold flex items-center gap-1">
+                    {requiereMotivo ? (
+                      <>
+                        <i className="bi bi-exclamation-triangle-fill text-amber-600"></i>
+                        <span>Generará incidencia ABIERTA para resolución del Gerente</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle-fill text-emerald-600"></i>
+                        <span>Conforme (S/ 50,000.00)</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -336,7 +353,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
 
             {requiereMotivo && (
               <div>
-                <label className="block text-xs font-semibold text-red-800 mb-1">
+                <label className="block text-xs font-semibold text-rose-800 mb-1.5">
                   Motivo obligatorio de la discrepancia / billetes observados *
                 </label>
                 <textarea
@@ -345,7 +362,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
                   rows={2}
                   placeholder="Especifique detalladamente el motivo de la discrepancia o billetes observados..."
                   required={requiereMotivo}
-                  className="w-full p-2.5 text-xs rounded-lg border border-amber-300 bg-amber-50/40 text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
+                  className="w-full p-3 text-xs rounded-xl border border-amber-300 bg-amber-50/30 text-[#1F1B1A] focus:outline-none focus:border-[#752F17] focus:ring-2 focus:ring-[#752F17]/15"
                 />
               </div>
             )}
@@ -354,7 +371,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
               <button
                 type="submit"
                 disabled={procesando}
-                className="px-6 py-2.5 rounded-lg text-xs font-bold bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer disabled:opacity-50 shadow-xs"
+                className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[#752F17] hover:bg-[#5C220E] text-white transition cursor-pointer disabled:opacity-50 shadow-xs"
               >
                 {procesando
                   ? 'Procesando entrega y abriendo caja...'
@@ -366,15 +383,15 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
           </form>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 shadow-2xs text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl font-bold mx-auto">
-            ✓
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-8 shadow-xs text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-2xl font-bold mx-auto">
+            <i className="bi bi-check2"></i>
           </div>
           <div>
-            <h2 className="text-base font-bold text-[#2A2220]">
+            <h2 className="text-base font-bold text-[#1F1B1A]">
               La caja de la agencia se encuentra abierta y operativa
             </h2>
-            <p className="text-xs text-[#6E625B] max-w-md mx-auto mt-1">
+            <p className="text-xs text-stone-500 max-w-md mx-auto mt-1">
               La remesa diaria de Hermes ya fue ingresada. Puede realizar desembolsos de créditos, consultas y cobro de cuotas con total normalidad.
             </p>
           </div>
@@ -383,15 +400,16 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
               <button
                 type="button"
                 onClick={onIrAOperaciones}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-[#752F17] hover:bg-[#5C220E] text-white transition cursor-pointer shadow-xs"
               >
-                Ir a Consulta de Clientes
+                <span>Ir a Consulta de Clientes</span>
+                <i className="bi bi-arrow-right text-xs"></i>
               </button>
             )}
             <button
               type="button"
               onClick={() => setMostrarFormAdicional(true)}
-              className="px-4 py-2 text-xs font-medium rounded-lg border border-[#E3D3C2] text-[#6E625B] hover:bg-[#FBF6F0] transition cursor-pointer"
+              className="px-4 py-2 text-xs font-medium rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 transition cursor-pointer"
             >
               + Registrar remesa adicional Hermes
             </button>

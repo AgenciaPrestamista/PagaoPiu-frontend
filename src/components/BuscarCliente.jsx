@@ -101,14 +101,14 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
     <div className="max-w-3xl mx-auto px-6 py-8">
       {/* Encabezado */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold tracking-tight text-[#2A2220]">Consulta de cliente</h1>
-        <p className="text-xs text-[#6E625B] mt-0.5">
+        <h1 className="text-xl font-bold tracking-tight text-[#1F1B1A]">Consulta de Cliente</h1>
+        <p className="text-xs text-stone-500 mt-0.5">
           Verificación de identidad y aptitud crediticia de Personas Naturales (RENIEC) y Empresas (SUNAT)
         </p>
       </div>
 
       {/* Tarjeta de Búsqueda */}
-      <div className="bg-white rounded-xl border border-[#E3D3C2] p-5 mb-5 shadow-2xs">
+      <div className="bg-white rounded-2xl border border-stone-200/90 p-5 mb-5 shadow-xs">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -120,14 +120,17 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
             <select
               value={tipoDocumento}
               onChange={(e) => handleTipoDocumentoChange(e.target.value)}
-              className="w-full h-10 px-3 text-xs font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B] transition cursor-pointer"
+              className="w-full h-10 px-3 text-xs font-semibold rounded-xl border border-stone-300 bg-white text-[#1F1B1A] focus:outline-none focus:border-[#752F17] transition cursor-pointer"
             >
               <option value="DNI">DNI (Persona Natural)</option>
               <option value="RUC">RUC (Empresa)</option>
             </select>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+              <i className="bi bi-search text-xs"></i>
+            </span>
             <input
               type="text"
               placeholder={tipoDocumento === 'DNI' ? 'Número de DNI (8 dígitos)' : 'Número de RUC (11 dígitos)'}
@@ -135,54 +138,65 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
               value={dni}
               onChange={(e) => setDni(e.target.value)}
               required
-              className="w-full h-10 px-3.5 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
+              className="w-full h-10 pl-8 pr-3 text-sm rounded-xl border border-stone-300 bg-white text-[#1F1B1A] placeholder:text-stone-400 focus:outline-none focus:border-[#752F17] transition font-mono"
             />
           </div>
           <button
             type="submit"
             disabled={cargando}
-            className="h-10 px-5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer"
+            className="h-10 px-5 text-xs font-semibold rounded-xl bg-[#752F17] hover:bg-[#5C220E] text-white transition disabled:opacity-50 cursor-pointer shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0"
           >
-            {cargando ? 'Consultando...' : 'Consultar'}
+            {cargando ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Consultando...</span>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-search text-xs"></i>
+                <span>Consultar</span>
+              </>
+            )}
           </button>
         </form>
 
         {error && (
-          <div className="mt-3.5 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-            {error}
+          <div className="mt-3.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+            <i className="bi bi-exclamation-circle-fill text-rose-600 shrink-0"></i>
+            <span>{error}</span>
           </div>
         )}
-
-
       </div>
 
       {/* Ficha de Resultado */}
       {resultado && (() => {
         const esJuridica = (resultado.dni || '').length === 11;
         return (
-        <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 shadow-2xs">
-          <div className="flex items-start justify-between pb-4 border-b border-[#E3D3C2]/40 mb-4 gap-4">
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-6 shadow-xs">
+          <div className="flex items-start justify-between pb-4 border-b border-stone-100 mb-4 gap-4">
             <div>
-              <span className="text-[11px] font-medium text-[#6E625B] uppercase tracking-wider block">
-                {esJuridica ? 'Empresa / Razón Social' : 'Resultado de identidad'}
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                {esJuridica ? 'Empresa / Razón Social' : 'Resultado de Identidad RENIEC'}
               </span>
-              <h2 className="text-base font-semibold text-[#2A2220] mt-0.5">
+              <h2 className="text-base font-bold text-[#1F1B1A] mt-0.5">
                 {resultado.nombreCompleto}
               </h2>
               {esJuridica && (
-                <div className="mt-1 text-xs text-[#2A2220]">
-                  <span className="text-[#6E625B]">Cargo de representación requerido:</span>{' '}
-                  <strong className="text-[#9C4A2B]">{resultado.representanteCargo || 'GERENTE GENERAL'}</strong>
+                <div className="mt-1 text-xs text-[#1F1B1A]">
+                  <span className="text-stone-500">Cargo de representación requerido:</span>{' '}
+                  <strong className="text-[#752F17]">{resultado.representanteCargo || 'GERENTE GENERAL'}</strong>
                 </div>
               )}
             </div>
             <div>
               {resultado.elegible ? (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <i className="bi bi-check-circle-fill text-xs"></i>
                   {esJuridica ? 'Empresa apta para crédito' : 'Apto para crédito'}
                 </span>
               ) : (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                  <i className="bi bi-shield-x text-xs"></i>
                   No elegible
                 </span>
               )}
@@ -190,29 +204,30 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
           </div>
 
           {!resultado.elegible && (
-            <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
-              <span className="font-semibold">Motivo:</span> {resultado.motivoRechazo}
+            <div className="mb-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
+              <i className="bi bi-exclamation-triangle-fill text-amber-600 shrink-0 mt-0.5"></i>
+              <div><span className="font-semibold">Motivo:</span> {resultado.motivoRechazo}</div>
             </div>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-2 text-xs">
             <div>
-              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'RUC' : 'DNI'}</span>
-              <span className="font-mono font-medium text-[#2A2220]">{resultado.dni}</span>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">{esJuridica ? 'RUC' : 'DNI'}</span>
+              <span className="font-mono font-semibold text-[#1F1B1A]">{resultado.dni}</span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Tipo de entidad' : 'Nacionalidad'}</span>
-              <span className="font-medium text-[#2A2220]">{esJuridica ? 'Persona Jurídica' : resultado.nacionalidad}</span>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">{esJuridica ? 'Tipo de entidad' : 'Nacionalidad'}</span>
+              <span className="font-medium text-[#1F1B1A]">{esJuridica ? 'Persona Jurídica' : resultado.nacionalidad}</span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Condición RUC' : 'Vigencia DNI'}</span>
-              <span className={`font-medium ${resultado.dniVigente ? 'text-emerald-700' : 'text-red-700'}`}>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">{esJuridica ? 'Condición RUC' : 'Vigencia DNI'}</span>
+              <span className={`font-semibold ${resultado.dniVigente ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {esJuridica ? (resultado.dniVigente ? 'Habido / Activo' : 'No habido') : (resultado.dniVigente ? 'Vigente' : 'Vencido')}
               </span>
             </div>
             <div>
-              <span className="text-[#6E625B] block text-[11px]">{esJuridica ? 'Estado fiscal' : 'Condición vital'}</span>
-              <span className={`font-medium ${!resultado.fallecido ? 'text-emerald-700' : 'text-red-700'}`}>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">{esJuridica ? 'Estado fiscal' : 'Condición vital'}</span>
+              <span className={`font-semibold ${!resultado.fallecido ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {esJuridica ? 'OPERATIVO' : (!resultado.fallecido ? 'Vivo' : 'Fallecido')}
               </span>
             </div>
@@ -304,8 +319,8 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                       <div className="font-bold text-[#2A2220]">
                         Préstamo #{p.id} {p.numeroContrato ? `(${p.numeroContrato})` : ''} — S/ {Number(p.capital).toFixed(2)}
                       </div>
-                      <div className="text-[11px] text-[#6E625B]">
-                        Plazo: {p.plazoMeses} meses • Cuota fija: S/ {Number(p.cuotaFija).toFixed(2)} • Agencia: {p.sucursalNombre}
+                      <div className="text-[11px] text-stone-500">
+                        Plazo: {p.plazoMeses} meses · Cuota fija: S/ {Number(p.cuotaFija).toFixed(2)} · Agencia: {p.sucursalNombre}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -329,18 +344,20 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                               onVerPrestamo(p.id);
                             }
                           }}
-                          className="h-8 px-3 text-xs font-semibold rounded-md bg-blue-700 text-white hover:bg-blue-800 transition cursor-pointer"
+                          className="h-8 px-3 text-xs font-semibold rounded-lg bg-blue-700 hover:bg-blue-800 text-white transition cursor-pointer shadow-xs inline-flex items-center gap-1"
                         >
-                          Retomar contrato
+                          <i className="bi bi-file-earmark-arrow-up text-xs"></i>
+                          <span>Retomar contrato</span>
                         </button>
                       ) : (
                         onVerPrestamo && (
                           <button
                             type="button"
                             onClick={() => onVerPrestamo(p.id)}
-                            className="h-8 px-3 text-xs font-medium rounded-md bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer"
+                            className="h-8 px-3 text-xs font-semibold rounded-lg bg-[#752F17] hover:bg-[#5C220E] text-white transition cursor-pointer shadow-xs inline-flex items-center gap-1"
                           >
-                            Cobrar cuota / Ver
+                            <i className="bi bi-cash-stack text-xs"></i>
+                            <span>Cobrar cuota / Ver</span>
                           </button>
                         )
                       )}
@@ -352,7 +369,7 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
           )}
 
           {resultado.elegible && (
-            <div className="mt-6 pt-4 border-t border-[#E3D3C2]/40 flex justify-end">
+            <div className="mt-6 pt-4 border-t border-stone-100 flex justify-end">
               <button
                 type="button"
                 disabled={!esJuridica && edadCliente !== null && (edadCliente < EDAD_MINIMA || edadCliente > EDAD_MAXIMA)}
@@ -367,9 +384,10 @@ export default function BuscarCliente({ onIniciarPrestamo, onVerPrestamo }) {
                     direccionEmpresa: resultado.direccion,
                   } : {}
                 )}
-                className="h-10 px-5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer"
+                className="h-10 px-5 text-xs font-semibold rounded-xl bg-[#752F17] hover:bg-[#5C220E] text-white transition disabled:opacity-50 cursor-pointer shadow-xs inline-flex items-center gap-2"
               >
-                Continuar a registrar préstamo
+                <span>Continuar a Registrar Préstamo</span>
+                <i className="bi bi-arrow-right text-xs"></i>
               </button>
             </div>
           )}

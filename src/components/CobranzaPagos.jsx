@@ -229,67 +229,83 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
             <button
               type="button"
               onClick={() => setTipoBusqueda('id')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition cursor-pointer ${
-                tipoBusqueda === 'id' ? 'bg-white text-[#2A2220] shadow-xs font-semibold' : 'text-[#6E625B]'
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition cursor-pointer ${
+                tipoBusqueda === 'id' ? 'bg-white text-[#1F1B1A] shadow-xs font-semibold' : 'text-stone-500'
               }`}
             >
               Por N° Préstamo
             </button>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+              <i className="bi bi-search text-xs"></i>
+            </span>
             <input
               type="text"
               placeholder={tipoBusqueda === 'dni' ? 'Ingrese número de DNI del cliente (8 dígitos)' : 'Ingrese número de préstamo'}
               value={criterioBusqueda}
               onChange={(e) => setCriterioBusqueda(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
+              className="w-full h-10 pl-8 pr-3 text-xs rounded-xl border border-stone-300 bg-white text-[#1F1B1A] placeholder:text-stone-400 focus:outline-none focus:border-[#752F17] transition font-mono"
             />
           </div>
 
           <button
             type="submit"
             disabled={cargando}
-            className="h-10 px-5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer shrink-0"
+            className="h-10 px-5 text-xs font-semibold rounded-xl bg-[#752F17] hover:bg-[#5C220E] text-white transition disabled:opacity-50 cursor-pointer shrink-0 shadow-xs inline-flex items-center gap-1.5"
           >
-            {cargando ? 'Buscando...' : 'Buscar préstamo'}
+            {cargando ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Buscando...</span>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-search text-xs"></i>
+                <span>Buscar préstamo</span>
+              </>
+            )}
           </button>
         </form>
 
         {error && (
-          <div className="mt-3.5 p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-            {error}
+          <div className="mt-3.5 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+            <i className="bi bi-exclamation-circle-fill text-rose-600 shrink-0"></i>
+            <span>{error}</span>
           </div>
         )}
 
         {mensajeExito && (
-          <div className="mt-3.5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
-            {mensajeExito}
+          <div className="mt-3.5 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+            <i className="bi bi-check-circle-fill text-emerald-600 shrink-0"></i>
+            <span>{mensajeExito}</span>
           </div>
         )}
 
         {alertaReactivacion && (
-          <div className="mt-3.5 p-3.5 rounded-lg bg-emerald-100 border border-emerald-300 text-xs text-emerald-900 font-medium animate-pulse">
-            DEUDA REGULARIZADA: Al saldar las cuotas morosas, el crédito y el cliente han revertido automáticamente a estado <strong>ACTIVO / VIGENTE</strong>.
+          <div className="mt-3.5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-900 font-medium flex items-center gap-2">
+            <i className="bi bi-check-circle-fill text-emerald-600 shrink-0"></i>
+            <span>DEUDA REGULARIZADA: Al saldar las cuotas morosas, el crédito y el cliente han revertido automáticamente a estado <strong>ACTIVO / VIGENTE</strong>.</span>
           </div>
         )}
       </div>
 
       {/* Lista de Préstamos múltiples encontrados si un DNI tiene más de 1 préstamo */}
       {prestamosEncontrados.length > 1 && !prestamoSeleccionado && (
-        <div className="bg-white rounded-xl border border-[#E3D3C2] p-5 mb-6 shadow-2xs">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-[#2A2220] mb-3">
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-5 mb-6 shadow-xs">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#1F1B1A] mb-3">
             El cliente tiene {prestamosEncontrados.length} préstamos registrados. Seleccione uno para cobrar:
           </h2>
-          <div className="divide-y divide-[#E3D3C2]/40">
+          <div className="divide-y divide-stone-100">
             {prestamosEncontrados.map((p) => (
               <div key={p.id} className="py-3 flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-semibold text-xs text-[#2A2220]">
+                  <div className="font-semibold text-xs text-[#1F1B1A]">
                     Préstamo #{p.id} — S/ {Number(p.capital).toFixed(2)} ({p.plazoMeses} meses)
                   </div>
-                  <div className="text-[11px] text-[#6E625B]">
-                    Agencia: {p.sucursalNombre} • Asesor: {p.asesorNombre} • Fecha: {p.fechaPrestamo}
+                  <div className="text-[11px] text-stone-500">
+                    Agencia: {p.sucursalNombre} · Asesor: {p.asesorNombre} · Fecha: {p.fechaPrestamo}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -306,7 +322,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                   <button
                     type="button"
                     onClick={() => cargarPrestamoPorId(p.id)}
-                    className="h-8 px-3 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition cursor-pointer"
+                    className="h-8 px-3 text-xs font-semibold rounded-lg bg-[#752F17] hover:bg-[#5C220E] text-white transition cursor-pointer shadow-xs"
                   >
                     Seleccionar
                   </button>
@@ -321,17 +337,17 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
       {prestamoSeleccionado && (
         <div className="space-y-6">
           {/* Ficha Resumen */}
-          <div className="bg-white rounded-xl border border-[#E3D3C2] p-5 shadow-2xs">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-[#E3D3C2]/40 gap-3">
+          <div className="bg-white rounded-2xl border border-stone-200/90 p-5 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-stone-100 gap-3">
               <div>
-                <span className="text-[11px] font-semibold text-[#6E625B] uppercase tracking-wider block">
+                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
                   Expediente de crédito para cobranza
                 </span>
-                <h2 className="text-base font-bold text-[#2A2220] mt-0.5">
+                <h2 className="text-base font-bold text-[#1F1B1A] mt-0.5">
                   Préstamo #{prestamoSeleccionado.id} — {prestamoSeleccionado.clienteNombre}
                 </h2>
-                <div className="text-xs text-[#6E625B] mt-0.5 font-mono">
-                  DNI: {prestamoSeleccionado.clienteDni} • Agencia Origen: {prestamoSeleccionado.sucursalNombre}
+                <div className="text-xs text-stone-500 mt-0.5 font-mono">
+                  DNI: {prestamoSeleccionado.clienteDni} · Agencia Origen: {prestamoSeleccionado.sucursalNombre}
                 </div>
               </div>
 
@@ -347,7 +363,7 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
                   Estado: {prestamoSeleccionado.estado}
                 </span>
 
-                <span className="text-xs px-2.5 py-1 rounded-full bg-[#FBF6F0] border border-[#E3D3C2] text-[#6E625B]">
+                <span className="text-xs px-2.5 py-1 rounded-full bg-stone-100 border border-stone-200 text-stone-600 font-medium">
                   Cliente: {prestamoSeleccionado.clienteEstado}
                 </span>
               </div>
@@ -356,8 +372,8 @@ export default function CobranzaPagos({ usuario, prestamoInicialId, onVerDetalle
             {/* Métricas clave */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
               <div>
-                <span className="text-[#6E625B] block text-[11px]">Capital otorgado</span>
-                <span className="font-bold text-[#2A2220] font-mono text-sm">
+                <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Capital otorgado</span>
+                <span className="font-bold text-[#1F1B1A] font-mono text-sm">
                   S/ {Number(prestamoSeleccionado.capital).toFixed(2)}
                 </span>
                 <span className="text-[#6E625B] block text-[11px]">{prestamoSeleccionado.plazoMeses} meses</span>

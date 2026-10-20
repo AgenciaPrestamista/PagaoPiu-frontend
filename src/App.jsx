@@ -178,9 +178,9 @@ export default function App() {
 
   if (cargandoSesion) {
     return (
-      <div className="min-h-screen bg-[#FBF6F0] flex flex-col justify-center items-center">
-        <div className="w-6 h-6 border-2 border-[#E3D3C2] border-t-[#9C4A2B] rounded-full animate-spin"></div>
-        <p className="mt-3 text-xs font-medium text-[#6E625B]">Iniciando PagaOPiu...</p>
+      <div className="min-h-screen bg-[#F4EFEB] flex flex-col justify-center items-center">
+        <div className="w-8 h-8 border-3 border-stone-200 border-t-[#752F17] rounded-full animate-spin"></div>
+        <p className="mt-3 text-xs font-semibold text-stone-600">Iniciando PagaOPiu...</p>
       </div>
     );
   }
@@ -214,7 +214,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBF6F0] text-[#2A2220] flex">
+    <div className="min-h-screen bg-[#F8F9FA] text-[#1F1B1A] flex">
       <Navbar
         usuario={usuario}
         cajaAbierta={cajaAbierta}
@@ -318,51 +318,62 @@ export default function App() {
 
       {/* Modal de Cambio de Contraseña activado desde Ajustes */}
       {mostrarModalPassword && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl border border-[#E3D3C2] p-6 max-w-sm w-full shadow-lg">
-            <h2 className="text-base font-semibold text-[#2A2220] mb-1">Cambiar contraseña</h2>
-            <p className="text-xs text-[#6E625B] mb-4">Ingresa tu contraseña actual y la nueva clave (mín. 6 caracteres).</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/50 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl border border-stone-200 p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-3">
+              <h2 className="text-base font-bold text-[#1F1B1A]">Cambiar Contraseña</h2>
+              <button
+                type="button"
+                onClick={() => setMostrarModalPassword(false)}
+                className="text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+              >
+                <i className="bi bi-x-lg text-sm"></i>
+              </button>
+            </div>
+            <p className="text-xs text-stone-500 mb-4">Ingresa tu contraseña actual y la nueva clave (mínimo 6 caracteres).</p>
 
             {errorPassword && (
-              <div className="mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
-                {errorPassword}
+              <div className="mb-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center gap-1.5">
+                <i className="bi bi-exclamation-circle-fill text-rose-600"></i>
+                <span>{errorPassword}</span>
               </div>
             )}
 
             {exitoPassword && (
-              <div className="mb-3 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800">
-                {exitoPassword}
+              <div className="mb-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-1.5">
+                <i className="bi bi-check-circle-fill text-emerald-600"></i>
+                <span>{exitoPassword}</span>
               </div>
             )}
 
-            <form onSubmit={handleCambiarPassword} className="space-y-3">
+            <form onSubmit={handleCambiarPassword} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#2A2220] mb-1">Contraseña actual</label>
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1">Contraseña actual</label>
                 <input
                   type="password"
                   value={passwordActual}
                   onChange={(e) => setPasswordActual(e.target.value)}
-                  className="w-full h-9 px-3 text-xs rounded-lg border border-[#E3D3C2] focus:outline-none focus:border-[#9C4A2B] bg-white text-[#2A2220]"
+                  className="w-full h-9 px-3 text-xs rounded-xl border border-stone-300 focus:outline-none focus:border-[#752F17] bg-white text-[#1F1B1A]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#2A2220] mb-1">Nueva contraseña</label>
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1">Nueva contraseña</label>
                 <input
                   type="password"
                   value={passwordNuevo}
                   onChange={(e) => setPasswordNuevo(e.target.value)}
-                  className="w-full h-9 px-3 text-xs rounded-lg border border-[#E3D3C2] focus:outline-none focus:border-[#9C4A2B] bg-white text-[#2A2220]"
+                  className="w-full h-9 px-3 text-xs rounded-xl border border-stone-300 focus:outline-none focus:border-[#752F17] bg-white text-[#1F1B1A]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#2A2220] mb-1">Confirmar nueva contraseña</label>
+                <label className="block text-xs font-semibold text-[#1F1B1A] mb-1">Confirmar nueva contraseña</label>
                 <input
                   type="password"
                   value={passwordConfirmacion}
                   onChange={(e) => setPasswordConfirmacion(e.target.value)}
-                  className="w-full h-9 px-3 text-xs rounded-lg border border-[#E3D3C2] focus:outline-none focus:border-[#9C4A2B] bg-white text-[#2A2220]"
+                  className="w-full h-9 px-3 text-xs rounded-xl border border-stone-300 focus:outline-none focus:border-[#752F17] bg-white text-[#1F1B1A]"
                 />
               </div>
 
@@ -370,14 +381,14 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setMostrarModalPassword(false)}
-                  className="h-8 px-3 text-xs rounded-lg border border-[#E3D3C2] text-[#6E625B] hover:bg-slate-50 transition cursor-pointer"
+                  className="h-8 px-3 text-xs rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-50 transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardandoPassword}
-                  className="h-8 px-3.5 text-xs font-medium rounded-lg bg-[#9C4A2B] text-white hover:bg-[#823B20] transition disabled:opacity-50 cursor-pointer"
+                  className="h-8 px-4 text-xs font-semibold rounded-xl bg-[#752F17] hover:bg-[#5C220E] text-white transition disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {guardandoPassword ? 'Guardando...' : 'Guardar'}
                 </button>
