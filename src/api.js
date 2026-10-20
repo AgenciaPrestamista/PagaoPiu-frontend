@@ -53,7 +53,13 @@ export const api = {
   prestamo: {
     obtener: (id) => request(`/prestamo/${id}`),
     listarPorClienteDni: (dni) => request(`/prestamo/cliente/${encodeURIComponent(dni)}`),
-    listarRecientes: () => request('/prestamo/recientes'),
+    listarRecientes: (sucursalId, estado) => {
+      const params = new URLSearchParams();
+      if (sucursalId) params.append('sucursalId', sucursalId);
+      if (estado) params.append('estado', estado);
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      return request(`/prestamo/recientes${qs}`);
+    },
     simular: (capital, plazoMeses, fechaPrestamo) => {
       let url = `/prestamo/simular?capital=${capital}&plazoMeses=${plazoMeses}`;
       if (fechaPrestamo) {
