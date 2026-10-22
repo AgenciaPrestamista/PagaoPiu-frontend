@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../api';
 import ContratoImpreso from './ContratoImpreso';
 
@@ -65,6 +65,8 @@ export default function RegistrarPrestamo({
   const [dniRepresentante, setDniRepresentante] = useState(dniRepInicial || '');
   const [cargoRepresentante, setCargoRepresentante] = useState(cargoRepInicial || 'GERENTE GENERAL');
   const [dniPresentado, setDniPresentado] = useState('');
+  const [validacionPresentado, setValidacionPresentado] = useState({ estado: 'idle', mensaje: '' });
+  const validacionSeq = useRef(0);
   const [plazoMeses, setPlazoMeses] = useState('');
   const [monto, setMonto] = useState('');
 
@@ -117,8 +119,28 @@ export default function RegistrarPrestamo({
     verificarContratosEnEspera();
   }, [dniInicial]);
 
+  // Valida contra SUNAT (y RENIEC) que el DNI sea de un representante legal de la empresa
+  const validarPresentado = async (valor, ruc) => {
+    const seq = ++validacionSeq.current;
+    if (!/^\d{8}$/.test(valor) || !/^\d{11}$/.test(ruc)) {
+      setValidacionPresentado({ estado: 'idle', mensaje: '' });
+      return;
+    }
+    setValidacionPresentado({ estado: 'validando', mensaje: '' });
+    try {
+      const r = await api.cliente.validarRepresentante(ruc, valor);
+      if (seq !== validacionSeq.current) return;
+      setValidacionPresentado({ estado: r.valido ? 'ok' : 'error', mensaje: r.mensaje || '' });
+    } catch (err) {
+      if (seq !== validacionSeq.current) return;
+      setValidacionPresentado({ estado: 'error', mensaje: err.message || 'No se pudo validar el DNI.' });
+    }
+  };
+
   const handleTipoDocumentoChange = (nuevoTipo) => {
     setTipoDocumento(nuevoTipo);
+    validacionSeq.current += 1;
+    setValidacionPresentado({ estado: 'idle', mensaje: '' });
     setDni('');
     setNombreCliente('');
     setDireccionEmpresa('');
@@ -182,8 +204,10 @@ export default function RegistrarPrestamo({
         if (data.representanteCargo) setCargoRepresentante(data.representanteCargo);
         if (d.startsWith('10')) {
           setDniPresentado(d.substring(2, 10));
+          validarPresentado(d.substring(2, 10), d);
         } else {
           setDniPresentado('');
+          validarPresentado('', d);
         }
       }
       if (!data.elegible) {
@@ -269,12 +293,8 @@ export default function RegistrarPrestamo({
         return;
       }
     } else {
-      if (!representanteLegal.trim()) {
-        setError('Consulte el RUC o ingrese el Representante Legal (Encargado) de la empresa.');
-        return;
-      }
       if (!nombreCliente.trim()) {
-        setError('Ingrese o consulte la Razón Social de la empresa.');
+        setError('Consulte el RUC para cargar la razón social de la empresa desde SUNAT.');
         return;
       }
       if (!dniPresentado.trim()) {
@@ -283,6 +303,14 @@ export default function RegistrarPrestamo({
       }
       if (!/^\d{8}$/.test(dniPresentado.trim())) {
         setError('El DNI de la persona que se presenta debe tener exactamente 8 dígitos.');
+        return;
+      }
+      if (validacionPresentado.estado === 'validando') {
+        setError('Espere a que termine la verificación del DNI de la persona que se presenta.');
+        return;
+      }
+      if (validacionPresentado.estado === 'error') {
+        setError(`El DNI ingresado no es válido: ${validacionPresentado.mensaje}`);
         return;
       }
     }
@@ -551,15 +579,21 @@ export default function RegistrarPrestamo({
                       type="text"
                       maxLength={tipoDocumento === 'DNI' ? 8 : 11}
                       value={dni}
-                      onChange={(e) => setDni(e.target.value)}
+                      onChange={(e) => setDni(e.target.value.replace(/\D/g, ''))}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          consultarDocumento();
+                        }
+                      }}
                       placeholder={tipoDocumento === 'DNI' ? '8 dígitos' : '11 dígitos'}
                       required
-                      className="flex-1 h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
+                      className="flex-1 min-w-0 h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] placeholder:text-[#6E625B]/60 focus:outline-none focus:border-[#9C4A2B] transition"
                     />
                     <button
                       type="button"
                       onClick={() => consultarDocumento()}
-                      className="h-10 px-3.5 text-xs font-medium rounded-lg border border-[#E3D3C2] bg-white hover:bg-[#FBF6F0] text-[#2A2220] transition cursor-pointer whitespace-nowrap"
+                      className="shrink-0 h-10 px-3.5 text-xs font-medium rounded-lg border border-[#E3D3C2] bg-white hover:bg-[#FBF6F0] text-[#2A2220] transition cursor-pointer whitespace-nowrap"
                     >
                       {tipoDocumento === 'DNI' ? 'RENIEC' : 'Consultar'}
                     </button>
@@ -568,58 +602,39 @@ export default function RegistrarPrestamo({
 
                 <div className="sm:col-span-5">
                   <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                    {tipoDocumento === 'DNI' ? 'Nombre verificado (RENIEC)' : 'Representante legal / Encargado (SUNAT)'}
+                    {tipoDocumento === 'DNI' ? 'Nombre verificado (RENIEC)' : 'Razón social (SUNAT)'}
                   </label>
                   <input
                     type="text"
-                    value={tipoDocumento === 'DNI' ? nombreCliente : representanteLegal}
-                    onChange={(e) => {
-                      if (tipoDocumento === 'DNI') {
-                        setNombreCliente(e.target.value);
-                      } else {
-                        setRepresentanteLegal(e.target.value);
-                      }
-                    }}
-                    readOnly={tipoDocumento === 'DNI'}
-                    placeholder={tipoDocumento === 'DNI' ? 'Se autocompleta con RENIEC' : 'Se autocompleta con SUNAT (Encargado)'}
+                    value={nombreCliente}
+                    readOnly
+                    placeholder={tipoDocumento === 'DNI' ? 'Se autocompleta con RENIEC' : 'Se autocompleta al consultar el RUC'}
                     required
-                    className={`w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] ${
-                      tipoDocumento === 'DNI'
-                        ? 'bg-[#FBF6F0] text-[#6E625B] cursor-not-allowed'
-                        : 'bg-white text-[#2A2220] font-medium focus:outline-none focus:border-[#9C4A2B]'
-                    }`}
+                    className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-[#FBF6F0] text-[#2A2220] font-medium cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Campos específicos de Persona Jurídica (Empresa) */}
-              {tipoDocumento === 'RUC' && (
+              {tipoDocumento === 'RUC' && !nombreCliente && (
+                <p className="text-xs text-[#6E625B] bg-[#FBF6F0] border border-dashed border-[#E3D3C2] rounded-xl px-4 py-3">
+                  <strong>Paso 1:</strong> escriba el RUC (11 dígitos) y presione <strong>Enter</strong> o <strong>Consultar</strong>.
+                  La razón social y el domicilio fiscal se cargan desde SUNAT. <strong>Paso 2:</strong> ingrese el DNI de quien se presenta.
+                </p>
+              )}
+
+              {tipoDocumento === 'RUC' && nombreCliente && (
                 <div className="p-4 bg-[#FBF6F0] rounded-xl border border-[#E3D3C2] space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <span className="text-[11px] font-bold text-[#6E625B] uppercase tracking-wider">
-                      Datos de la Empresa y Domicilio Fiscal SUNAT
+                      Paso 2 · Quién se presenta
                     </span>
-                    {representanteLegal && (
-                      <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                        Representante verificado en SUNAT
-                      </span>
-                    )}
+                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                      Empresa consultada en SUNAT
+                    </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                    <div className="sm:col-span-6">
-                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                        Razón Social de la empresa
-                      </label>
-                      <input
-                        type="text"
-                        value={nombreCliente}
-                        onChange={(e) => setNombreCliente(e.target.value)}
-                        placeholder="Razón Social completa de la empresa"
-                        required={tipoDocumento === 'RUC'}
-                        className="w-full h-10 px-3 text-sm font-semibold rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
-                      />
-                    </div>
-                    <div className="sm:col-span-6">
+                    <div className="sm:col-span-12">
                       <label className="block text-xs font-bold text-[#9C4A2B] mb-1">
                         DNI de la persona que se presenta *
                       </label>
@@ -627,28 +642,35 @@ export default function RegistrarPrestamo({
                         type="text"
                         maxLength={8}
                         value={dniPresentado}
-                        onChange={(e) => setDniPresentado(e.target.value.replace(/\D/g, ''))}
+                        onChange={(e) => {
+                          const valor = e.target.value.replace(/\D/g, '');
+                          setDniPresentado(valor);
+                          validarPresentado(valor, dni.trim());
+                        }}
+                        aria-invalid={validacionPresentado.estado === 'error'}
+                        aria-describedby="estado-dni-presentado"
                         placeholder="DNI (8 dígitos) de la persona presente"
                         required={tipoDocumento === 'RUC'}
                         className="w-full h-10 px-3 text-sm font-mono font-bold rounded-lg border-2 border-[#9C4A2B] bg-white text-[#2A2220] focus:outline-none focus:ring-1 focus:ring-[#9C4A2B]"
                       />
-                      <span className="text-[10px] text-[#6E625B] mt-0.5 block">
-                        {dni.startsWith('10')
-                          ? 'RUC 10: Debe coincidir con el DNI del titular (dígitos 3 al 10).'
-                          : 'RUC 20: El servidor validará coincidencia con el representante legal de SUNAT y vigencia RENIEC.'}
-                      </span>
-                    </div>
-                    <div className="sm:col-span-3">
-                      <label className="block text-xs font-medium text-[#2A2220] mb-1">
-                        Cargo
-                      </label>
-                      <input
-                        type="text"
-                        value={cargoRepresentante}
-                        onChange={(e) => setCargoRepresentante(e.target.value)}
-                        placeholder="Gerente General"
-                        className="w-full h-10 px-3 text-sm rounded-lg border border-[#E3D3C2] bg-white text-[#2A2220] focus:outline-none focus:border-[#9C4A2B]"
-                      />
+                      <div id="estado-dni-presentado" role="status" aria-live="polite" className="mt-1 text-xs min-h-4">
+                        {validacionPresentado.estado === 'validando' && (
+                          <span className="text-[#6E625B]"><i className="bi bi-hourglass-split mr-1"></i>Verificando en SUNAT y RENIEC…</span>
+                        )}
+                        {validacionPresentado.estado === 'ok' && (
+                          <span className="text-emerald-700 font-semibold"><i className="bi bi-check-circle-fill mr-1"></i>{validacionPresentado.mensaje}</span>
+                        )}
+                        {validacionPresentado.estado === 'error' && (
+                          <span className="text-rose-700 font-semibold"><i className="bi bi-x-circle-fill mr-1"></i>{validacionPresentado.mensaje}</span>
+                        )}
+                        {validacionPresentado.estado === 'idle' && (
+                          <span className="text-[10px] text-[#6E625B]">
+                            {dni.startsWith('10')
+                              ? 'RUC 10: debe coincidir con el DNI del titular (dígitos 3 al 10).'
+                              : 'RUC 20: se comprobará que sea un representante legal de la empresa en SUNAT y que su DNI esté vigente en RENIEC.'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="sm:col-span-12">
                       <label className="block text-xs font-medium text-[#2A2220] mb-1">

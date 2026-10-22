@@ -327,7 +327,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
           {/* ======================================================== */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
             {/* 1. Dinero Total Colocado */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
@@ -337,7 +337,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-cash-stack text-xs"></i>
                   </div>
                 </div>
-                <span className="text-base font-bold tracking-tight text-stone-900 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-stone-900 block font-mono cifra">
                   {formatoMoneda(kpiMontoColocado)}
                 </span>
               </div>
@@ -345,7 +345,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
             </div>
 
             {/* 2. Cantidad de Clientes Prestatarios */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
@@ -355,7 +355,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-person-check text-xs"></i>
                   </div>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-stone-900 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-stone-900 block font-mono cifra">
                   {kpiCantidadClientes}
                 </span>
               </div>
@@ -363,7 +363,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
             </div>
 
             {/* 3. Préstamos Vigentes (Al día) */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
@@ -373,7 +373,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-check-circle text-xs"></i>
                   </div>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-emerald-700 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-emerald-700 block font-mono cifra">
                   {kpiPrestamosVigentes}
                 </span>
               </div>
@@ -381,7 +381,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
             </div>
 
             {/* 4. Préstamos Morosos */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
@@ -391,7 +391,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-exclamation-triangle text-xs"></i>
                   </div>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-amber-700 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-amber-700 block font-mono cifra">
                   {kpiPrestamosMorosos}
                 </span>
               </div>
@@ -399,7 +399,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
             </div>
 
             {/* 5. Préstamos Judiciales (Extrajudiciales) */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">
@@ -409,7 +409,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-shield-exclamation text-xs"></i>
                   </div>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-rose-700 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-rose-700 block font-mono cifra">
                   {kpiPrestamosExtrajudiciales}
                 </span>
               </div>
@@ -417,7 +417,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
             </div>
 
             {/* 6. Monto Total Recaudado */}
-            <div className="bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
+            <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-3.5 shadow-xs flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
@@ -427,7 +427,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                     <i className="bi bi-graph-up-arrow text-xs"></i>
                   </div>
                 </div>
-                <span className="text-base font-bold tracking-tight text-stone-900 block font-mono">
+                <span className="text-xl font-bold tracking-tight text-stone-900 block font-mono cifra">
                   {formatoMoneda(kpiMontoRecaudado)}
                 </span>
               </div>
@@ -734,7 +734,7 @@ export default function PanelGerente({ usuario, onIrAUsuarios }) {
                       <tr key={inc.id} className="hover:bg-amber-50/30 transition">
                         <td className="py-3 px-3 font-mono text-stone-600">{formatearFecha(inc.fecha)}</td>
                         <td className="py-3 px-3 font-semibold text-[#1F1B1A]">{inc.sucursalNombre}</td>
-                        <td className="py-3 px-3 text-stone-500">{inc.usuarioReportaNombre}</td>
+                        <td className="py-3 px-3 text-stone-500">{inc.usuarioReporta}</td>
                         <td className="py-3 px-3 text-end font-mono text-[#1F1B1A]">{formatoMoneda(inc.montoEsperado)}</td>
                         <td className="py-3 px-3 text-end font-mono text-emerald-700 font-semibold">
                           {formatoMoneda(inc.montoApto)}

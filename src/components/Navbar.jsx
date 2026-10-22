@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 export default function Navbar({
   usuario,
   cajaAbierta = true,
+  cajaCerrada = false,
   onLogout,
   vistaActual,
   setVistaActual,
   onAbrirCambiarPassword,
 }) {
   const [ajustesAbierto, setAjustesAbierto] = useState(false);
+  const [menuAbierto, setMenuAbierto] = useState(false);
 
   if (!usuario) return null;
 
@@ -25,7 +27,44 @@ export default function Navbar({
     .join('');
 
   return (
-    <aside className="w-64 bg-[#752F17] text-white flex flex-col min-h-screen shrink-0 sticky top-0 h-screen select-none border-r border-[#5C220E]/40 shadow-sm">
+    <>
+    {/* Barra superior móvil */}
+    <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 bg-[#752F17] text-white flex items-center gap-3 px-4 shadow-sm">
+      <button
+        type="button"
+        onClick={() => setMenuAbierto(true)}
+        aria-label="Abrir menú de navegación"
+        aria-expanded={menuAbierto}
+        aria-controls="menu-lateral"
+        className="w-10 h-10 -ml-2 flex items-center justify-center rounded-lg hover:bg-white/10 cursor-pointer"
+      >
+        <i className="bi bi-list text-2xl"></i>
+      </button>
+      <i className="bi bi-bank2 text-lg"></i>
+      <span className="font-bold tracking-tight">PagaOPiu</span>
+      {!cajaAbierta && usuario.rol === 'ASESOR' && (
+        <span className="ml-auto text-[10px] bg-[#E0B25A] text-[#2A2220] px-2 py-0.5 rounded font-bold uppercase tracking-wide">
+          Caja cerrada
+        </span>
+      )}
+    </header>
+
+    {/* Fondo oscuro del menú móvil */}
+    {menuAbierto && (
+      <div
+        className="md:hidden fixed inset-0 z-40 bg-black/50"
+        onClick={() => setMenuAbierto(false)}
+        aria-hidden="true"
+      ></div>
+    )}
+
+    <aside
+      id="menu-lateral"
+      onClick={(e) => { if (e.target.closest('nav button')) setMenuAbierto(false); }}
+      className={`w-64 sidebar-bg text-white flex flex-col shrink-0 select-none border-r border-[#5C220E]/40 shadow-sm fixed inset-y-0 left-0 z-50 h-screen transition-transform duration-200 md:sticky md:top-0 md:translate-x-0 md:z-auto ${
+        menuAbierto ? 'translate-x-0' : '-translate-x-full'
+      }`}
+    >
       {/* Cabecera Institucional */}
       <div className="p-4 border-b border-white/10 flex items-center gap-3 bg-[#5C220E]/30">
         <div className="w-9 h-9 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 shadow-xs">
@@ -81,6 +120,25 @@ export default function Navbar({
                 <span>Administración de personal</span>
               </div>
               {vistaActual === 'usuarios' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E0B25A]"></span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setVistaActual('cierres')}
+              aria-current={vistaActual === 'cierres' ? 'page' : undefined}
+              className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-medium transition cursor-pointer flex items-center justify-between focus-visible:outline-2 focus-visible:outline-[#E0B25A] ${
+                vistaActual === 'cierres'
+                  ? 'bg-white/15 text-white font-semibold shadow-xs'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <i className="bi bi-safe2 text-sm text-[#F1E4D6]"></i>
+                <span>Cierres de caja</span>
+              </div>
+              {vistaActual === 'cierres' && (
                 <span className="w-1.5 h-1.5 rounded-full bg-[#E0B25A]"></span>
               )}
             </button>
@@ -174,11 +232,13 @@ export default function Navbar({
             >
               <div className="flex items-center gap-2.5">
                 <i className="bi bi-safe text-sm text-[#F1E4D6]"></i>
-                <span>Recepción Hermes</span>
+                <span>{cajaCerrada ? 'Caja del día' : 'Recepción Hermes'}</span>
               </div>
               {!cajaAbierta ? (
-                <span className="text-[10px] bg-[#E0B25A] text-[#2A2220] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide">
-                  Requerido
+                <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide ${
+                  cajaCerrada ? 'bg-white/20 text-white' : 'bg-[#E0B25A] text-[#2A2220]'
+                }`}>
+                  {cajaCerrada ? 'Cerrada' : 'Requerido'}
                 </span>
               ) : (
                 vistaActual === 'caja' && <span className="w-1.5 h-1.5 rounded-full bg-[#E0B25A]"></span>
@@ -190,9 +250,11 @@ export default function Navbar({
               <div className="mx-1 mt-3 p-3 rounded-xl bg-black/20 border border-amber-400/30 text-[11px] text-white/90 leading-relaxed shadow-xs">
                 <div className="flex items-center gap-1.5 font-bold text-[#FFE5A3] mb-1">
                   <i className="bi bi-shield-lock-fill text-xs text-amber-300"></i>
-                  <span>Apertura pendiente</span>
+                  <span>{cajaCerrada ? 'Caja cerrada por hoy' : 'Apertura pendiente'}</span>
                 </div>
-                Recepcione la remesa diaria de Hermes para habilitar las operaciones de agencia.
+                {cajaCerrada
+                  ? 'Las operaciones se habilitan mañana al recibir la remesa de Hermes.'
+                  : 'Recepcione la remesa diaria de Hermes para habilitar las operaciones de agencia.'}
               </div>
             )}
           </>
@@ -257,5 +319,6 @@ export default function Navbar({
         </button>
       </div>
     </aside>
+    </>
   );
 }

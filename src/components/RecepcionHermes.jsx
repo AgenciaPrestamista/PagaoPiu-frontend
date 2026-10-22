@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api';
 
-export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperaciones }) {
+export default function RecepcionHermes({ usuario, onCajaAbierta, onCajaCerrada, onIrAOperaciones }) {
   const [estadoCaja, setEstadoCaja] = useState(null);
+  const [confirmandoCierre, setConfirmandoCierre] = useState(false);
+  const [observacionCierre, setObservacionCierre] = useState('');
+  const [cerrando, setCerrando] = useState(false);
   const [cargandoCaja, setCargandoCaja] = useState(true);
 
   // Campos obligatorios ingresados manualmente por el asesor
@@ -95,6 +98,25 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
     }
   };
 
+  const handleCerrarCaja = async () => {
+    setError(null);
+    setMensajeExito(null);
+    setCerrando(true);
+    try {
+      const nuevoEstado = await api.caja.cerrar(observacionCierre.trim() || undefined);
+      setEstadoCaja(nuevoEstado);
+      setConfirmandoCierre(false);
+      setObservacionCierre('');
+      if (onCajaCerrada) {
+        onCajaCerrada(nuevoEstado);
+      }
+    } catch (err) {
+      setError(err.message || 'Error al cerrar la caja.');
+    } finally {
+      setCerrando(false);
+    }
+  };
+
   const formatoMoneda = (val) => {
     if (val === null || val === undefined || isNaN(Number(val))) return 'S/ 0.00';
     return `S/ ${Number(val).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -111,13 +133,14 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
 
   const sucursalNombre = estadoCaja?.sucursalNombre || usuario?.sucursalNombre || 'Sucursal';
   const cajaEstaAbierta = Boolean(estadoCaja?.abierta);
+  const cajaEstaCerrada = Boolean(estadoCaja?.cerrada);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
       {/* Encabezado */}
       <div className="mb-6">
         <h1 className="text-xl font-bold tracking-tight text-[#1F1B1A]">
-          {cajaEstaAbierta ? 'Estado de Caja y Remesas Hermes' : 'Apertura de Caja — Recepción Hermes'}
+          {cajaEstaCerrada ? 'Cierre de Caja del Día' : cajaEstaAbierta ? 'Estado de Caja y Remesas Hermes' : 'Apertura de Caja — Recepción Hermes'}
         </h1>
         <p className="text-xs text-stone-500 mt-0.5">
           Agencia {sucursalNombre} · Transporte de caudales y apertura operativa diaria
@@ -125,7 +148,7 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
       </div>
 
       {/* Banner si la caja está CERRADA */}
-      {!cajaEstaAbierta && (
+      {!cajaEstaAbierta && !cajaEstaCerrada && (
         <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 border border-amber-300 text-amber-900 shadow-xs">
           <div className="flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
@@ -183,6 +206,11 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               Caja Abierta y Operativa
             </span>
+          ) : cajaEstaCerrada ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-stone-500"></span>
+              Caja cerrada por hoy
+            </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
@@ -235,7 +263,31 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
       )}
 
       {/* Formulario de Recepción Hermes (Requerido si caja cerrada, opcional si caja abierta) */}
-      {!cajaEstaAbierta || mostrarFormAdicional ? (
+      {cajaEstaCerrada ? (
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-8 shadow-xs text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-stone-100 border border-stone-300 text-stone-700 flex items-center justify-center text-2xl mx-auto">
+            <i className="bi bi-lock-fill"></i>
+          </div>
+          <div>
+            <h2 className="text-base font-bold text-[#1F1B1A]">Caja cerrada por hoy</h2>
+            <p className="text-xs text-stone-500 max-w-md mx-auto mt-1">
+              La caja de la agencia fue cerrada{estadoCaja?.usuarioCierre ? ` por ${estadoCaja.usuarioCierre}` : ''}
+              {estadoCaja?.fechaCierre ? ` el ${new Date(estadoCaja.fechaCierre).toLocaleString('es-PE')}` : ''}
+              {' '}Las operaciones se habilitarán al abrir la caja mañana con la remesa Hermes.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 max-w-md mx-auto text-xs text-left">
+            <div>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Saldo al cierre</span>
+              <span className="text-base font-bold text-emerald-800 font-mono">{formatoMoneda(estadoCaja?.saldoCierre)}</span>
+            </div>
+            <div>
+              <span className="text-stone-400 block text-[10px] font-bold uppercase tracking-wider mb-0.5">Total cobrado hoy</span>
+              <span className="text-base font-bold text-[#1F1B1A] font-mono">{formatoMoneda(estadoCaja?.totalCobradoCierre)}</span>
+            </div>
+          </div>
+        </div>
+      ) : !cajaEstaAbierta || mostrarFormAdicional ? (
         <div className="bg-white rounded-2xl border border-stone-200/90 p-6 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -413,7 +465,50 @@ export default function RecepcionHermes({ usuario, onCajaAbierta, onIrAOperacion
             >
               + Registrar remesa adicional Hermes
             </button>
+            <button
+              type="button"
+              onClick={() => setConfirmandoCierre(true)}
+              className="px-4 py-2 text-xs font-semibold rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 transition cursor-pointer"
+            >
+              <i className="bi bi-lock mr-1"></i>Cerrar caja
+            </button>
           </div>
+          {confirmandoCierre && (
+            <div className="max-w-md mx-auto mt-4 p-4 rounded-xl border border-rose-200 bg-rose-50/60 text-left space-y-3">
+              <p className="text-xs text-rose-900">
+                Al cerrar la caja se registra el saldo y el total cobrado de hoy, y se bloquean las operaciones hasta la próxima apertura. Esta acción no se puede deshacer.
+              </p>
+              <p className="text-xs text-rose-900">
+                Saldo actual: <strong className="font-mono">{formatoMoneda(estadoCaja?.saldoDisponible)}</strong> · Cobrado hoy: <strong className="font-mono">{formatoMoneda(estadoCaja?.totalCobradoHoy)}</strong>
+              </p>
+              <textarea
+                value={observacionCierre}
+                onChange={(e) => setObservacionCierre(e.target.value)}
+                rows={2}
+                maxLength={500}
+                placeholder="Observación del cierre (opcional)"
+                className="w-full p-2.5 text-xs rounded-lg border border-rose-200 bg-white text-[#1F1B1A] focus:outline-none focus:border-rose-400"
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoCierre(false)}
+                  disabled={cerrando}
+                  className="px-3 py-1.5 text-xs rounded-lg border border-stone-300 text-stone-600 hover:bg-white cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCerrarCaja}
+                  disabled={cerrando}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-700 hover:bg-rose-800 text-white cursor-pointer disabled:opacity-50"
+                >
+                  {cerrando ? 'Cerrando...' : 'Confirmar cierre'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -257,7 +257,7 @@ export default function AdministracionUsuarios({ usuario }) {
 
       {/* Tarjetas de Resumen KPI */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
-        <div className="bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
+        <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
@@ -267,14 +267,14 @@ export default function AdministracionUsuarios({ usuario }) {
                 <i className="bi bi-people text-xs"></i>
               </div>
             </div>
-            <span className="text-2xl font-bold tracking-tight text-stone-900 font-mono block">
+            <span className="text-2xl font-bold tracking-tight text-stone-900 font-mono cifra block">
               {totalUsuarios}
             </span>
           </div>
           <span className="text-[11px] text-stone-400 mt-1 block">Registradas en plataforma</span>
         </div>
 
-        <div className="bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
+        <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">
@@ -284,14 +284,14 @@ export default function AdministracionUsuarios({ usuario }) {
                 <i className="bi bi-person-badge text-xs"></i>
               </div>
             </div>
-            <span className="text-2xl font-bold tracking-tight text-blue-700 font-mono block">
+            <span className="text-2xl font-bold tracking-tight text-blue-700 font-mono cifra block">
               {totalAsesores}
             </span>
           </div>
           <span className="text-[11px] text-stone-400 mt-1 block">En agencias operativas</span>
         </div>
 
-        <div className="bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
+        <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">
@@ -301,14 +301,14 @@ export default function AdministracionUsuarios({ usuario }) {
                 <i className="bi bi-shield-check text-xs"></i>
               </div>
             </div>
-            <span className="text-2xl font-bold tracking-tight text-amber-700 font-mono block">
+            <span className="text-2xl font-bold tracking-tight text-amber-700 font-mono cifra block">
               {totalGerentes}
             </span>
           </div>
           <span className="text-[11px] text-stone-400 mt-1 block">Supervisión integral</span>
         </div>
 
-        <div className="bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
+        <div className="kpi-card bg-white rounded-xl border border-stone-200/90 p-4 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
@@ -318,7 +318,7 @@ export default function AdministracionUsuarios({ usuario }) {
                 <i className="bi bi-person-slash text-xs"></i>
               </div>
             </div>
-            <span className={`text-2xl font-bold tracking-tight font-mono block ${totalInactivos > 0 ? 'text-rose-700' : 'text-stone-900'}`}>
+            <span className={`text-2xl font-bold tracking-tight font-mono cifra block ${totalInactivos > 0 ? 'text-rose-700' : 'text-stone-900'}`}>
               {totalInactivos}
             </span>
           </div>

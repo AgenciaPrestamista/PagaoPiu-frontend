@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { api } from './api';
+import { api, SESION_EXPIRADA_EVENTO } from './api';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import BuscarCliente from './components/BuscarCliente';
@@ -9,11 +9,29 @@ import PanelGerente from './components/PanelGerente';
 import CobranzaPagos from './components/CobranzaPagos';
 import AdministracionUsuarios from './components/AdministracionUsuarios';
 import RecepcionHermes from './components/RecepcionHermes';
+import CierresCaja from './components/CierresCaja';
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [cargandoSesion, setCargandoSesion] = useState(true);
   const [cajaAbierta, setCajaAbierta] = useState(false);
+  const [cajaCerrada, setCajaCerrada] = useState(false);
+  const [avisoSesion, setAvisoSesion] = useState('');
+
+  // Si el servidor responde 401 (sesión vencida o servidor reiniciado), volver al login con un aviso claro
+  useEffect(() => {
+    const alExpirarSesion = () => {
+      sessionStorage.removeItem('pagaopiu_vista');
+      sessionStorage.removeItem('pagaopiu_prestamo_id');
+      sessionStorage.removeItem('pagaopiu_datos_cliente');
+      setCajaAbierta(false);
+      setCajaCerrada(false);
+      setUsuario(null);
+      setAvisoSesion('Su sesión expiró o se cerró. Inicie sesión nuevamente para continuar.');
+    };
+    window.addEventListener(SESION_EXPIRADA_EVENTO, alExpirarSesion);
+    return () => window.removeEventListener(SESION_EXPIRADA_EVENTO, alExpirarSesion);
+  }, []);
 
   // Vistas: 'buscar', 'registrar', 'cobranza', 'detalle', 'caja', 'panel', 'usuarios'
   const [vistaActual, setVistaActualState] = useState(() => {
@@ -75,6 +93,7 @@ export default function App() {
         } else if (u?.rol === 'ASESOR') {
           try {
             const estadoCaja = await api.caja.obtenerEstado();
+            setCajaCerrada(Boolean(estadoCaja?.cerrada));
             if (estadoCaja?.abierta) {
               setCajaAbierta(true);
               setVistaActualState(vistaGuardada || 'buscar');
@@ -107,6 +126,7 @@ export default function App() {
       sessionStorage.removeItem('pagaopiu_datos_cliente');
       setUsuario(null);
       setCajaAbierta(false);
+      setCajaCerrada(false);
       setVistaActualState('buscar');
     }
   };
@@ -188,7 +208,9 @@ export default function App() {
   if (!usuario) {
     return (
       <Login
+        aviso={avisoSesion}
         onLoginExitoso={async (u) => {
+          setAvisoSesion('');
           setUsuario(u);
           if (u?.rol === 'GERENTE') {
             setCajaAbierta(true);
@@ -196,6 +218,7 @@ export default function App() {
           } else {
             try {
               const estadoCaja = await api.caja.obtenerEstado();
+              setCajaCerrada(Boolean(estadoCaja?.cerrada));
               if (estadoCaja?.abierta) {
                 setCajaAbierta(true);
                 setVistaActual('buscar', true);
@@ -214,10 +237,11 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] text-[#1F1B1A] flex">
+    <div className="min-h-screen text-[#1F1B1A] flex">
       <Navbar
         usuario={usuario}
         cajaAbierta={cajaAbierta}
+        cajaCerrada={cajaCerrada}
         onLogout={handleLogout}
         vistaActual={vistaActual}
         setVistaActual={setVistaActual}
@@ -231,10 +255,12 @@ export default function App() {
         }}
       />
 
-      <main className="flex-1 overflow-y-auto min-h-screen">
+      <main className="flex-1 min-w-0 overflow-y-auto min-h-screen pt-14 md:pt-0">
         {usuario.rol === 'GERENTE' ? (
           vistaActual === 'usuarios' ? (
             <AdministracionUsuarios usuario={usuario} />
+          ) : vistaActual === 'cierres' ? (
+            <CierresCaja />
           ) : (
             <PanelGerente
               usuario={usuario}
@@ -295,6 +321,7 @@ export default function App() {
               <RecepcionHermes
                 usuario={usuario}
                 onCajaAbierta={handleCajaAbierta}
+                onCajaCerrada={() => { setCajaAbierta(false); setCajaCerrada(true); }}
                 onIrAOperaciones={() => {
                   sessionStorage.setItem('pagaopiu_vista', 'buscar');
                   setVistaActualState('buscar');

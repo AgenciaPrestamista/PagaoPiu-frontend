@@ -1,6 +1,8 @@
 const envBase = (import.meta.env.VITE_API_BASE_URL || import.meta.env.API_BASE_URL || '').replace(/\/+$/, '');
 const BASE_URL = envBase ? (envBase.endsWith('/api') ? envBase : `${envBase}/api`) : '/api';
 
+export const SESION_EXPIRADA_EVENTO = 'pagaopiu:sesion-expirada';
+
 async function request(endpoint, options = {}) {
   const isFormData = options.body instanceof FormData;
   const defaultHeaders = isFormData ? {} : {
@@ -17,6 +19,13 @@ async function request(endpoint, options = {}) {
   };
 
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
+
+  // Sesión vencida o perdida (p. ej. el servidor se reinició): avisar a la app para volver al login.
+  // /auth/login y /auth/me quedan fuera porque allí un 401 es una respuesta esperada.
+  if (response.status === 401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/me')) {
+    window.dispatchEvent(new CustomEvent(SESION_EXPIRADA_EVENTO));
+    throw new Error('Su sesión expiró. Inicie sesión nuevamente.');
+  }
 
   if (response.status === 204) {
     return null;
@@ -49,6 +58,8 @@ export const api = {
   },
   cliente: {
     buscar: (dni) => request(`/cliente/buscar?dni=${encodeURIComponent(dni)}`),
+    validarRepresentante: (ruc, dni) =>
+      request(`/cliente/validar-representante?ruc=${encodeURIComponent(ruc)}&dni=${encodeURIComponent(dni)}`),
   },
   prestamo: {
     obtener: (id) => request(`/prestamo/${id}`),
@@ -159,6 +170,19 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    cerrar: (observacion, sucursalId) =>
+      request('/caja/cerrar', {
+        method: 'POST',
+        body: JSON.stringify({ observacion, sucursalId }),
+      }),
+    cierres: ({ desde, hasta, sucursalId } = {}) => {
+      const params = new URLSearchParams();
+      if (desde) params.append('desde', desde);
+      if (hasta) params.append('hasta', hasta);
+      if (sucursalId) params.append('sucursalId', sucursalId);
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      return request(`/caja/cierres${qs}`);
+    },
     obtenerEstado: (sucursalId) => {
       const query = sucursalId ? `?sucursalId=${sucursalId}` : '';
       return request(`/caja/estado${query}`);
